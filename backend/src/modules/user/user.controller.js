@@ -1,5 +1,7 @@
 import mongoose from 'mongoose'
 import User from './user.model.js'
+import UserCourse from './userCourse.model.js'
+import Course from '../course/course.model.js'
 import Parents from '../parents/parents.model.js'
 import { success, successWithPagination } from '../../utils/response.js'
 import { NotFoundError, ConflictError } from '../../utils/customErrors.js'
@@ -37,7 +39,28 @@ export const getStudents = async (req, reply) => {
     User.countDocuments({ role: 'student' })
   ])
 
-  return successWithPagination(reply, students, { page, limit, total }, 'Students fetched successfully')
+  // Bulk-fetch enrollments for all students on this page in a single query,
+  // then attach enrolledCourses[] to each student so the frontend needs no
+  // extra per-student API calls.
+  const studentIds = students.map((s) => s._id)
+  const enrollments = await UserCourse.find({
+    user: { $in: studentIds },
+    status: { $ne: 'dropped' }
+  }).populate('course', 'title _id')
+
+  const enrollmentMap = {}
+  enrollments.forEach((e) => {
+    const uid = String(e.user)
+    if (!enrollmentMap[uid]) enrollmentMap[uid] = []
+    if (e.course) enrollmentMap[uid].push(e.course)
+  })
+
+  const studentsWithCourses = students.map((s) => ({
+    ...s.toObject(),
+    enrolledCourses: enrollmentMap[String(s._id)] || []
+  }))
+
+  return successWithPagination(reply, studentsWithCourses, { page, limit, total }, 'Students fetched successfully')
 }
 
 export const getStudentById = async (req, reply) => {
@@ -137,7 +160,35 @@ export const getTeachers = async (req, reply) => {
     User.countDocuments({ role: 'teacher' })
   ])
 
-  return successWithPagination(reply, teachers, { page, limit, total }, 'Teachers fetched successfully')
+  // Bulk-fetch assigned courses for all teachers on this page in one query
+  const teacherIds = teachers.map((t) => t._id)
+  const courses = await Course.find({
+    isActive: true,
+    $or: [
+      { teacher: { $in: teacherIds } },
+      { teachers: { $in: teacherIds } }
+    ]
+  }).select('title teacher teachers')
+
+  const courseMap = {}
+  courses.forEach((c) => {
+    const allIds = [
+      ...(c.teacher ? [String(c.teacher)] : []),
+      ...(c.teachers || []).map((t) => String(t._id ?? t))
+    ]
+    const unique = [...new Set(allIds)]
+    unique.forEach((tid) => {
+      if (!courseMap[tid]) courseMap[tid] = []
+      courseMap[tid].push({ _id: c._id, title: c.title })
+    })
+  })
+
+  const teachersWithCourses = teachers.map((t) => ({
+    ...t.toObject(),
+    assignedCourses: courseMap[String(t._id)] || []
+  }))
+
+  return successWithPagination(reply, teachersWithCourses, { page, limit, total }, 'Teachers fetched successfully')
 }
 
 export const getTeacherById = async (req, reply) => {

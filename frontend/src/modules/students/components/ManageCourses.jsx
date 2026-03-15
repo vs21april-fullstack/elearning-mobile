@@ -112,7 +112,13 @@ export default function ManageCourses({ student, onClose }) {
     mutationFn: enrollStudentInCourse,
     onSuccess: () => {
       toast.success("Course enrolled successfully!");
-      queryClient.invalidateQueries(["studentCourses", student._id]);
+      queryClient.invalidateQueries({
+        queryKey: ["studentCourses", student._id],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["student-courses", student._id],
+      });
+      queryClient.invalidateQueries({ queryKey: ["students"] });
       setSelectedCourse(null);
     },
     onError: (error) => {
@@ -126,7 +132,13 @@ export default function ManageCourses({ student, onClose }) {
     mutationFn: unenrollStudentFromCourse,
     onSuccess: () => {
       toast.success("Course unenrolled successfully!");
-      queryClient.invalidateQueries(["studentCourses", student._id]);
+      queryClient.invalidateQueries({
+        queryKey: ["studentCourses", student._id],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["student-courses", student._id],
+      });
+      queryClient.invalidateQueries({ queryKey: ["students"] });
     },
     onError: (error) => {
       toast.error(
@@ -282,12 +294,19 @@ export default function ManageCourses({ student, onClose }) {
                       typeof enrollment.course === "object"
                         ? enrollment.course
                         : null;
+                    const teacher =
+                      typeof enrollment.teacher === "object"
+                        ? enrollment.teacher
+                        : null;
                     if (!course) return null;
 
                     return (
                       <div key={enrollment._id} className={styles.courseCard}>
                         <div className={styles.courseInfo}>
                           <h6 className={styles.courseTitle}>{course.title}</h6>
+                          <p className={styles.classLabel}>
+                            Teacher: {teacher?.name || "Not assigned"}
+                          </p>
                           <div className={styles.courseMeta}>
                             <span
                               className={`${styles.statusBadge} ${

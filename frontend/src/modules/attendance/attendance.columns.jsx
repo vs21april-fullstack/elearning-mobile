@@ -103,3 +103,78 @@ export const getLoginAttendanceColumns = () => [
     },
   },
 ];
+
+// ─── Teacher Meeting Log Columns ───────────────────────────────────────────
+
+const formatMeetingDate = (date) =>
+  new Date(date).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+
+const statusBadgeClass = (status) => {
+  switch (status) {
+    case "scheduled":
+      return styles.statusScheduled;
+    case "ongoing":
+      return styles.statusOngoing;
+    case "completed":
+      return styles.statusCompleted;
+    case "cancelled":
+      return styles.statusCancelled;
+    default:
+      return styles.statusBadge;
+  }
+};
+
+export const getMeetingLogColumns = () => [
+  {
+    header: "Meeting",
+    accessor: "title",
+    cell: (row) => (
+      <div>
+        <div style={{ fontWeight: 600, color: "#1e293b" }}>
+          {row.title || "Untitled"}
+        </div>
+        <div style={{ fontSize: "0.8rem", color: "#64748b", marginTop: 2 }}>
+          {row.course?.title || "—"}
+        </div>
+      </div>
+    ),
+  },
+  {
+    header: "Teacher",
+    accessor: "teacher",
+    cell: (row) => row.teacher?.name || "N/A",
+  },
+  {
+    header: "Course",
+    accessor: "course",
+    cell: (row) => row.course?.title || "N/A",
+  },
+  {
+    header: "Date",
+    accessor: "date",
+    cell: (row) => (row.date ? formatMeetingDate(row.date) : "—"),
+  },
+  {
+    header: "Time",
+    accessor: "startTime",
+    cell: (row) =>
+      row.startTime && row.endTime
+        ? `${row.startTime} – ${row.endTime}`
+        : row.startTime || "—",
+  },
+  {
+    header: "Status",
+    accessor: "status",
+    cell: (row) => (
+      <span className={`${styles.statusBadge} ${statusBadgeClass(row.status)}`}>
+        {row.status
+          ? row.status.charAt(0).toUpperCase() + row.status.slice(1)
+          : "—"}
+      </span>
+    ),
+  },
+];

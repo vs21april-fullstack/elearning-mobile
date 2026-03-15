@@ -1,117 +1,115 @@
-import { useState, useCallback, useMemo } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  getAttendanceReport,
-  recordLogout,
-  getUserLoginAttendance,
-} from "./attendance.api";
-import { getLoginAttendanceColumns } from "./attendance.columns";
+import { useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { fetchMeetings } from "../meetings/meetings.api";
+import { fetchTeachers } from "../teachers/teachers.api";
+import { fetchCourses } from "../courses/courses.api";
+import { getMeetingLogColumns } from "./attendance.columns";
 import DataTable from "../../components/DataTable";
 import Spinner from "../../components/Spinner";
-import Button from "../../components/Button";
 import EmptyState from "../../components/EmptyState";
-import { Input } from "../../components/FormField";
 import styles from "./Attendance.module.css";
-import toast from "react-hot-toast";
 
 export default function Attendance() {
-  const [activeTab, setActiveTab] = useState("student"); // 'student' or 'teacher'
-  const [startDate, setStartDate] = useState(
-    new Date(new Date().setDate(new Date().getDate() - 7))
-      .toISOString()
-      .split("T")[0],
-  );
-  const [endDate, setEndDate] = useState(
-    new Date().toISOString().split("T")[0],
-  );
-  const queryClient = useQueryClient();
+  const [selectedTeacherId, setSelectedTeacherId] = useState("");
+  const [selectedCourseId, setSelectedCourseId] = useState("");
 
-  // Attendance query with role filter
-  const { data: attendanceData, isLoading } = useQuery({
-    queryKey: ["attendance", startDate, endDate, activeTab],
-    queryFn: () => getUserLoginAttendance(startDate, endDate, activeTab),
+  // Fetch teachers for dropdown
+  const { data: teachersData } = useQuery({
+    queryKey: ["teachers-all"],
+    queryFn: () => fetchTeachers({ page: 1, limit: 100 }),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Fetch courses for dropdown
+  const { data: coursesData } = useQuery({
+    queryKey: ["courses-all"],
+    queryFn: () => fetchCourses({ page: 1, limit: 100 }),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Fetch meeting logs with active filters
+  const { data: meetingsData, isLoading } = useQuery({
+    queryKey: ["meeting-logs", selectedTeacherId, selectedCourseId],
+    queryFn: () =>
+      fetchMeetings({
+        page: 1,
+        limit: 200,
+        ...(selectedTeacherId && { teacherId: selectedTeacherId }),
+        ...(selectedCourseId && { courseId: selectedCourseId }),
+      }),
     keepPreviousData: true,
   });
 
-  const records = useMemo(
-    () => (Array.isArray(attendanceData) ? attendanceData : []),
-    [attendanceData],
-  );
+  const teachers = useMemo(() => teachersData?.data ?? [], [teachersData]);
+  const courses = useMemo(() => coursesData?.data ?? [], [coursesData]);
+  const meetings = useMemo(() => meetingsData?.data ?? [], [meetingsData]);
 
-  const logoutMutation = useMutation({
-    mutationFn: recordLogout,
-    onSuccess: () => {
-      toast.success("Logout recorded successfully!");
-      queryClient.invalidateQueries(["attendance"]);
-    },
-    onError: (error) => {
-      toast.error(error.response?.data?.message || "Failed to record logout");
-    },
-  });
+  const columns = getMeetingLogColumns();
 
-  const handleLogout = useCallback(() => {
-    if (window.confirm("Are you sure you want to record logout?")) {
-      logoutMutation.mutate();
-    }
-  }, [logoutMutation]);
-
-  const loginColumns = getLoginAttendanceColumns();
+  const hasFilters = selectedTeacherId || selectedCourseId;
 
   return (
     <div className="container-fluid p-4">
-      <div className="mb-4">
-        <h2 className="mb-3">Attendance Management</h2>
+      {/* Page Header */}
+      <div className={styles.pageHeader}>
+        <div>
+          <h2 className={styles.pageTitle}>Teacher Meeting Logs</h2>
+          <p className={styles.pageSubtext}>
+            View all teacher meeting sessions. Filter by teacher or course.
+          </p>
+        </div>
+        {meetings.length > 0 && (
+          <span className={styles.recordsBadge}>
+            {meetings.length} Record{meetings.length !== 1 ? "s" : ""}
+          </span>
+        )}
+      </div>
 
-        {/* Tabs - Student/Teacher */}
-        <div className={`glass-card ${styles.tabsHeader}`}>
-          <button
-            onClick={() => setActiveTab("student")}
-            className={`${styles.tabButton} ${
-              activeTab === "student"
-                ? styles.tabButtonActive
-                : styles.tabButtonInactive
-            }`}
+      {/* Filter Bar */}
+      <div className={`glass-card ${styles.filterBar}`}>
+        <div className={styles.filterGroup}>
+          <label className={styles.filterLabel}>Teacher</label>
+          <select
+            className={styles.filterSelect}
+            value={selectedTeacherId}
+            onChange={(e) => setSelectedTeacherId(e.target.value)}
           >
-            Students
-          </button>
-          <button
-            onClick={() => setActiveTab("teacher")}
-            className={`${styles.tabButton} ${
-              activeTab === "teacher"
-                ? styles.tabButtonActive
-                : styles.tabButtonInactive
-            }`}
-          >
-            Teachers
-          </button>
+            <option value="">All Teachers</option>
+            {teachers.map((t) => (
+              <option key={t._id} value={t._id}>
+                {t.name}
+              </option>
+            ))}
+          </select>
         </div>
 
-        {/* Filters */}
-        <div className="row mb-4 mt-4">
-          <div className="col-md-4">
-            <Input
-              label="Start Date"
-              type="date"
-              id="startDate"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-            />
-          </div>
-          <div className="col-md-4">
-            <Input
-              label="End Date"
-              type="date"
-              id="endDate"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-            />
-          </div>
-          <div className="col-md-4 d-flex align-items-end">
-            <Button onClick={handleLogout} className={styles.fullWidthButton}>
-              Record Logout
-            </Button>
-          </div>
+        <div className={styles.filterGroup}>
+          <label className={styles.filterLabel}>Course</label>
+          <select
+            className={styles.filterSelect}
+            value={selectedCourseId}
+            onChange={(e) => setSelectedCourseId(e.target.value)}
+          >
+            <option value="">All Courses</option>
+            {courses.map((c) => (
+              <option key={c._id} value={c._id}>
+                {c.title}
+              </option>
+            ))}
+          </select>
         </div>
+
+        {hasFilters && (
+          <button
+            className={styles.clearButton}
+            onClick={() => {
+              setSelectedTeacherId("");
+              setSelectedCourseId("");
+            }}
+          >
+            ✕ Clear Filters
+          </button>
+        )}
       </div>
 
       {/* Content */}
@@ -119,21 +117,23 @@ export default function Attendance() {
         <div className={styles.loadingContainer}>
           <Spinner />
         </div>
-      ) : records.length > 0 ? (
+      ) : meetings.length > 0 ? (
         <div className={styles.contentCard}>
-          <DataTable columns={loginColumns} data={records} />
+          <DataTable columns={columns} data={meetings} />
         </div>
       ) : (
         <div className={styles.emptyCard}>
           <EmptyState
-            type="attendance"
-            title={`No ${activeTab === "student" ? "Student" : "Teacher"} Records`}
-            message={`No attendance records found for the selected ${activeTab === "student" ? "students" : "teachers"}. Records will appear here once they log in.`}
+            type="meetings"
+            title="No Meeting Logs Found"
+            message={
+              hasFilters
+                ? "No teacher meetings match the selected filters. Try adjusting or clearing the filters."
+                : "No teacher meeting sessions have been recorded yet."
+            }
           />
         </div>
       )}
-
-      {/* Note: Manual attendance entry has been disabled per requirements */}
     </div>
   );
 }

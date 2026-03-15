@@ -2,10 +2,35 @@
  * Student List Table Columns Configuration
  */
 
-import Avatar from "../../components/Avatar";
 import EditIcon from "../../assets/svg/EditIcon";
 import DeleteIcon from "../../assets/svg/DeleteIcon";
 import styles from "../../styles/Columns.module.css";
+
+function CoursePills({ courses }) {
+  if (!courses || courses.length === 0)
+    return <span style={{ color: "#94a3b8", fontSize: "0.82rem" }}>—</span>;
+  return (
+    <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+      {courses.map((c) => (
+        <span
+          key={c._id}
+          style={{
+            padding: "3px 10px",
+            borderRadius: 20,
+            fontSize: "0.75rem",
+            fontWeight: 600,
+            background: "rgba(47,125,87,0.1)",
+            color: "#2f7d57",
+            border: "1px solid rgba(47,125,87,0.2)",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {c.title}
+        </span>
+      ))}
+    </div>
+  );
+}
 
 export const getStudentColumns = (
   handleEdit,
@@ -16,12 +41,9 @@ export const getStudentColumns = (
     header: "Student",
     accessor: "name",
     cell: (row) => (
-      <div className={styles.personCell}>
-        <Avatar name={row.name} image={row.profileImage} size={40} />
-        <div>
-          <div className={styles.personName}>{row.name}</div>
-          <div className={styles.personMeta}>{row.email}</div>
-        </div>
+      <div>
+        <div className={styles.personName}>{row.name}</div>
+        <div className={styles.personMeta}>{row.email}</div>
       </div>
     ),
   },
@@ -38,6 +60,11 @@ export const getStudentColumns = (
     header: "Father Phone",
     accessor: "parents",
     cell: (row) => row.parents?.father?.phone || "-",
+  },
+  {
+    header: "Enrolled Courses",
+    accessor: "enrolledCourses",
+    cell: (row) => <CoursePills courses={row.enrolledCourses || []} />,
   },
   {
     header: "Actions",

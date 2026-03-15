@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Select from "react-select";
 import {
   assignTeacherToCourses,
@@ -52,6 +52,7 @@ const selectStyles = {
 };
 
 export default function ManageTeacherCourses({ teacher, onClose, onSuccess }) {
+  const queryClient = useQueryClient();
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [assignedCourseIds, setAssignedCourseIds] = useState([]);
 
@@ -91,6 +92,13 @@ export default function ManageTeacherCourses({ teacher, onClose, onSuccess }) {
     mutationFn: assignTeacherToCourses,
     onSuccess: () => {
       toast.success("Courses assigned successfully!");
+      queryClient.invalidateQueries({
+        queryKey: ["teacher-courses", teacher?._id],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["teacherCourses", teacher?._id],
+      });
+      queryClient.invalidateQueries({ queryKey: ["teachers"] });
       onSuccess?.();
       onClose?.();
     },
