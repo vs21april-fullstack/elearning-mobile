@@ -12,7 +12,7 @@ import styles from "./DashboardCards.module.css";
 const tooltipContentStyle = {
   background: "rgba(255, 255, 255, 0.95)",
   backdropFilter: "blur(10px)",
-  border: "1px solid rgba(99, 102, 241, 0.2)",
+  border: "1px solid rgba(47, 125, 87, 0.2)",
   borderRadius: "12px",
   boxShadow: "0 8px 24px rgba(0, 0, 0, 0.1)",
 };
@@ -30,7 +30,7 @@ export default function ChartSection({ data }) {
           </p>
         </div>
         <div className={`glass ${styles.chartBadge}`}>
-          <ChartBarIcon size={18} color="#667eea" /> Statistics
+          <ChartBarIcon size={18} color="#2f7d57" /> Statistics
         </div>
       </div>
 
@@ -50,8 +50,8 @@ export default function ChartSection({ data }) {
           />
           <defs>
             <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#667eea" stopOpacity={1} />
-              <stop offset="100%" stopColor="#764ba2" stopOpacity={0.8} />
+              <stop offset="0%" stopColor="#2f7d57" stopOpacity={1} />
+              <stop offset="100%" stopColor="#1e5f42" stopOpacity={0.8} />
             </linearGradient>
           </defs>
         </BarChart>

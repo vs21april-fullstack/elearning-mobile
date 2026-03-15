@@ -49,7 +49,7 @@ const EmptyState = ({
         />
         <path
           d="M180 240l20-20 20 20"
-          stroke="#6366F1"
+          stroke="#2F7D57"
           strokeWidth="4"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -84,8 +84,8 @@ const EmptyState = ({
         <circle cx="200" cy="150" r="120" fill="#DBEAFE" />
         <rect x="130" y="100" width="140" height="100" rx="8" fill="#BFDBFE" />
         <rect x="150" y="120" width="100" height="60" rx="4" fill="#93C5FD" />
-        <circle cx="210" cy="220" r="15" fill="#3B82F6" />
-        <circle cx="190" cy="220" r="12" fill="#60A5FA" />
+        <circle cx="210" cy="220" r="15" fill="#2F7D57" />
+        <circle cx="190" cy="220" r="12" fill="#4CAE7B" />
       </svg>
     ),
     courses: (
@@ -123,15 +123,15 @@ const EmptyState = ({
         <rect x="140" y="90" width="120" height="140" rx="8" fill="#C7D2FE" />
         <path
           d="M165 120h70M165 140h70"
-          stroke="#818CF8"
+          stroke="#73b995"
           strokeWidth="4"
           strokeLinecap="round"
         />
-        <circle cx="175" cy="170" r="8" fill="#6366F1" />
-        <circle cx="175" cy="195" r="8" fill="#6366F1" />
+        <circle cx="175" cy="170" r="8" fill="#2F7D57" />
+        <circle cx="175" cy="195" r="8" fill="#2F7D57" />
         <path
           d="M195 165l8 8 15-15M195 190l8 8 15-15"
-          stroke="#4F46E5"
+          stroke="#2f7d57"
           strokeWidth="4"
           strokeLinecap="round"
           strokeLinejoin="round"

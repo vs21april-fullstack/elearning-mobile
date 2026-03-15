@@ -4,10 +4,10 @@ import styles from "./DashboardCards.module.css";
 export default function StatCard({ title, value, icon, color }) {
   const [displayValue, setDisplayValue] = useState(0);
   const colorClassByHex = {
-    "#667eea": styles.borderIndigo,
-    "#764ba2": styles.borderPurple,
-    "#f093fb": styles.borderPink,
-    "#4facfe": styles.borderBlue,
+    "#2f7d57": styles.borderIndigo,
+    "#1e5f42": styles.borderPurple,
+    "#4cae7b": styles.borderPink,
+    "#8fd7a9": styles.borderBlue,
   };
 
   const borderClass = colorClassByHex[color] || styles.borderIndigo;

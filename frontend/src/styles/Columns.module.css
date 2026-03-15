@@ -40,11 +40,11 @@
 }
 
 .buttonEdit {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #2f7d57 0%, #1e5f42 100%);
 }
 
 .buttonEdit:hover {
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 12px rgba(47, 125, 87, 0.4);
 }
 
 .buttonDelete {
@@ -72,7 +72,7 @@
 }
 
 .buttonPrimary {
-  background: #3b82f6;
+  background: #2f7d57;
 }
 
 .buttonSuccess {

@@ -20,7 +20,7 @@
 .courseCard:hover {
   transform: translateY(-2px);
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-  border-color: #667eea;
+  border-color: #2f7d57;
 }
 
 .courseInfo {
@@ -45,7 +45,7 @@
 .badge {
   display: inline-block;
   padding: 0.25rem 0.75rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #2f7d57 0%, #1e5f42 100%);
   color: white;
   border-radius: 20px;
   font-size: 0.75rem;
@@ -90,7 +90,7 @@
 
 .progressBar {
   height: 100%;
-  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(90deg, #2f7d57 0%, #1e5f42 100%);
   border-radius: 10px;
   transition: width 0.3s ease;
   display: flex;

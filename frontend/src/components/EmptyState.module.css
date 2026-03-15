@@ -30,7 +30,7 @@
 
 .button {
   padding: 10px 24px;
-  background: #667eea;
+  background: #2f7d57;
   color: white;
   border: none;
   border-radius: 8px;
@@ -40,9 +40,9 @@
 }
 
 .button:hover {
-  background: #5568d3;
+  background: #286c4b;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 4px 12px rgba(47, 125, 87, 0.3);
 }
 
 .emptyContentContainer {

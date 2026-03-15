@@ -46,25 +46,25 @@ export default function Dashboard() {
           title="Total Students"
           value={students}
           icon={<StudentIcon size={28} color="white" />}
-          color="#667eea"
+          color="#2f7d57"
         />
         <KpiCard
           title="Total Teachers"
           value={teachers}
           icon={<TeacherIcon size={28} color="white" />}
-          color="#764ba2"
+          color="#1e5f42"
         />
         <KpiCard
           title="Active Courses"
           value={courses}
           icon={<SchoolBuildingIcon size={28} color="white" />}
-          color="#f093fb"
+          color="#4cae7b"
         />
         {/* <KpiCard
           title="Revenue"
           value={`₹${revenue.toLocaleString()}`}
           icon={<MoneyIcon size={28} color="white" />}
-          color="#4facfe"
+          color="#8fd7a9"
         /> */}
       </div>
 

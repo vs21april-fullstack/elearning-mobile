@@ -80,12 +80,12 @@
 }
 
 .editButton {
-  background: #0d6efd;
+  background: #2f7d57;
   color: white;
 }
 
 .editButton:hover {
-  background: #0b5ed7;
+  background: #1e5f42;
 }
 
 .deleteButton {

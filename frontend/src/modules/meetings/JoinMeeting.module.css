@@ -13,7 +13,7 @@
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #2f7d57 0%, #1e5f42 100%);
   color: white;
   font-size: 1.2rem;
 }
@@ -33,7 +33,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #2f7d57 0%, #1e5f42 100%);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -62,7 +62,7 @@
   border-radius: 8px;
   padding: 16px;
   margin-bottom: 24px;
-  border-left: 4px solid #667eea;
+  border-left: 4px solid #2f7d57;
 }
 
 .meetingInfo p {
@@ -97,8 +97,8 @@
 
 .input:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: #2f7d57;
+  box-shadow: 0 0 0 3px rgba(47, 125, 87, 0.1);
 }
 
 .preJoinOptions {
@@ -123,7 +123,7 @@
 }
 
 .joinButton {
-  background: #667eea;
+  background: #2f7d57;
   color: white;
   padding: 12px;
   border: none;
@@ -135,7 +135,7 @@
 }
 
 .joinButton:hover {
-  background: #5568d3;
+  background: #286c4b;
 }
 
 .joinButton:active {
@@ -210,7 +210,7 @@
   color: white;
   font-size: 14px;
   font-weight: 500;
-  background: rgba(102, 126, 234, 0.8);
+  background: rgba(47, 125, 87, 0.8);
   padding: 8px 12px;
   border-radius: 20px;
 }
@@ -219,7 +219,7 @@
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: #667eea;
+  background: #2f7d57;
   color: white;
   border: none;
   font-size: 20px;
@@ -231,7 +231,7 @@
 }
 
 .controlButton:hover {
-  background: #5568d3;
+  background: #286c4b;
   transform: scale(1.1);
 }
 

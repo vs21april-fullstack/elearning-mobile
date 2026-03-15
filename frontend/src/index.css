@@ -18,16 +18,16 @@
   --glass-shadow: rgba(0, 0, 0, 0.1);
 
   /* Primary Colors */
-  --primary: #6366f1;
-  --primary-light: #818cf8;
-  --primary-dark: #4f46e5;
-  --secondary: #8b5cf6;
-  --accent: #ec4899;
+  --primary: #2f7d57;
+  --primary-light: #4cae7b;
+  --primary-dark: #1e5f42;
+  --secondary: #145a3a;
+  --accent: #7bc998;
 
   /* Gradient Backgrounds */
-  --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  --gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  --gradient-accent: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  --gradient-primary: linear-gradient(135deg, #2f7d57 0%, #1e5f42 100%);
+  --gradient-secondary: linear-gradient(135deg, #7bc998 0%, #4cae7b 100%);
+  --gradient-accent: linear-gradient(135deg, #4cae7b 0%, #8fd7a9 100%);
   --gradient-dark: linear-gradient(
     135deg,
     #0f2027 0%,
@@ -87,7 +87,7 @@ body {
 }
 
 .glass-dark {
-  background: rgba(30, 41, 59, 0.95);
+  background: rgba(20, 90, 58, 0.95);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -134,13 +134,13 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(102, 126, 234, 0.5);
+  background: rgba(47, 125, 87, 0.5);
   border-radius: 10px;
   transition: background 0.3s;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(102, 126, 234, 0.7);
+  background: rgba(47, 125, 87, 0.7);
 }
 
 div#root {
@@ -176,13 +176,13 @@ h6 {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(47, 125, 87, 0.1);
   transition: all 0.3s ease;
 }
 
 .card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.15);
+  box-shadow: 0 12px 40px 0 rgba(47, 125, 87, 0.15);
 }
 
 .btn {
@@ -196,12 +196,12 @@ h6 {
 .btn-primary {
   background: var(--gradient-primary);
   color: white;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 15px rgba(47, 125, 87, 0.4);
 }
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+  box-shadow: 0 6px 20px rgba(47, 125, 87, 0.5);
 }
 
 .form-control,
@@ -217,14 +217,14 @@ h6 {
 
 .form-control:hover:not(:disabled),
 .form-select:hover:not(:disabled) {
-  border-color: #667eea;
+  border-color: #2f7d57;
 }
 
 .form-control:focus,
 .form-select:focus {
-  border-color: #667eea;
+  border-color: #2f7d57;
   border-width: 2px;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  box-shadow: 0 0 0 3px rgba(47, 125, 87, 0.1);
   background: white;
   outline: none;
   padding: 11px 15px; /* Adjust padding to compensate for increased border */
@@ -277,7 +277,7 @@ textarea.form-control {
 }
 
 .table thead {
-  background: rgba(99, 102, 241, 0.1);
+  background: rgba(47, 125, 87, 0.1);
   border-radius: 12px;
 }
 
@@ -286,7 +286,7 @@ textarea.form-control {
 }
 
 .table tbody tr:hover {
-  background: rgba(99, 102, 241, 0.05);
+  background: rgba(47, 125, 87, 0.05);
   transform: scale(1.01);
 }
 

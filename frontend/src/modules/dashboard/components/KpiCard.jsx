@@ -2,10 +2,10 @@ import styles from "./DashboardCards.module.css";
 
 export default function KpiCard({ title, value, icon, color }) {
   const colorClassByHex = {
-    "#667eea": styles.colorIndigo,
-    "#764ba2": styles.colorPurple,
-    "#f093fb": styles.colorPink,
-    "#4facfe": styles.colorBlue,
+    "#2f7d57": styles.colorIndigo,
+    "#1e5f42": styles.colorPurple,
+    "#4cae7b": styles.colorPink,
+    "#8fd7a9": styles.colorBlue,
   };
 
   const colorClass = colorClassByHex[color] || styles.colorIndigo;

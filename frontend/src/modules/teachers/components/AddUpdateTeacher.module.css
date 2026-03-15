@@ -1,7 +1,7 @@
 /* Teacher Form Styles */
 .sectionHeader {
   font-weight: 700;
-  color: #667eea;
+  color: #2f7d57;
   margin-bottom: 16px;
   font-size: 1.1rem;
 }
@@ -22,7 +22,7 @@
 }
 
 .imageDropzone:hover {
-  border-color: #0d6efd;
+  border-color: #2f7d57;
 }
 
 .imageDropzoneError {
@@ -43,7 +43,7 @@
   position: absolute;
   bottom: 12px;
   right: 12px;
-  background-color: #0d6efd;
+  background-color: #2f7d57;
   color: white;
   border-radius: 50%;
   width: 44px;
@@ -157,9 +157,9 @@
 .addInlineButton {
   padding: 10px 20px;
   border-radius: 12px;
-  border: 1px solid #667eea;
+  border: 1px solid #2f7d57;
   background: transparent;
-  color: #667eea;
+  color: #2f7d57;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -167,16 +167,16 @@
 }
 
 .addInlineButton:hover {
-  background: #667eea;
+  background: #2f7d57;
   color: white;
 }
 
 .addButton {
   padding: 10px 20px;
   border-radius: 10px;
-  border: 2px dashed #667eea;
+  border: 2px dashed #2f7d57;
   background: transparent;
-  color: #667eea;
+  color: #2f7d57;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -185,15 +185,15 @@
 }
 
 .addButton:hover {
-  background: rgba(102, 126, 234, 0.05);
-  border-color: #764ba2;
+  background: rgba(47, 125, 87, 0.05);
+  border-color: #1e5f42;
 }
 
 .submitButton {
   padding: 12px 32px;
   border-radius: 12px;
   font-weight: 600;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #2f7d57 0%, #1e5f42 100%);
   border: none;
 }
 

@@ -18,19 +18,19 @@ const selectStyles = {
   control: (base, state) => ({
     ...base,
     borderRadius: "12px",
-    border: state.isFocused ? "2px solid #667eea" : "1px solid #dee2e6",
-    boxShadow: state.isFocused ? "0 0 0 3px rgba(102, 126, 234, 0.1)" : "none",
+    border: state.isFocused ? "2px solid #2f7d57" : "1px solid #dee2e6",
+    boxShadow: state.isFocused ? "0 0 0 3px rgba(47, 125, 87, 0.1)" : "none",
     padding: "6px 8px",
     background: "white",
     transition: "all 0.2s ease",
     "&:hover": {
-      borderColor: "#667eea",
+      borderColor: "#2f7d57",
     },
   }),
   option: (base, state) => ({
     ...base,
     backgroundColor: state.isSelected
-      ? "#667eea"
+      ? "#2f7d57"
       : state.isFocused
         ? "#f0f2ff"
         : "white",
@@ -38,7 +38,7 @@ const selectStyles = {
     padding: "12px 16px",
     cursor: "pointer",
     "&:active": {
-      backgroundColor: "#667eea",
+      backgroundColor: "#2f7d57",
     },
   }),
   menu: (base) => ({

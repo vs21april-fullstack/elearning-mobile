@@ -5,9 +5,10 @@ import { useAuth } from "../app/authContext";
 import { fetchProfile } from "../modules/profile/profile.api";
 import UserIcon from "../assets/svg/UserIcon";
 import LogoutIcon from "../assets/svg/LogoutIcon";
+import HamburgerIcon from "../assets/svg/HamburgerIcon";
 import styles from "./Topbar.module.css";
 
-export default function Topbar() {
+export default function Topbar({ isCollapsed, toggleSidebar }) {
   const { logout, user } = useAuth();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
@@ -46,7 +47,16 @@ export default function Topbar() {
 
   return (
     <div className={`glass ${styles.topbar}`}>
-      <h4 className={styles.title}>{roleName} Dashboard</h4>
+      <div className={styles.leftSection}>
+        <button
+          onClick={toggleSidebar}
+          className={styles.hamburgerButton}
+          title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+        >
+          <HamburgerIcon size={18} color="#2f7d57" />
+        </button>
+        <h4 className={styles.title}>{roleName} Dashboard</h4>
+      </div>
 
       <div ref={dropdownRef} className={styles.dropdownContainer}>
         <div onClick={() => setOpen(!open)} className={styles.trigger}>
@@ -63,7 +73,7 @@ export default function Topbar() {
               }}
               className={styles.menuItem}
             >
-              <UserIcon size={18} color="#667eea" /> Profile
+              <UserIcon size={18} color="#2f7d57" /> Profile
             </div>
 
             <div

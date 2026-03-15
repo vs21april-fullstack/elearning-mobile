@@ -14,73 +14,65 @@
 }
 
 .logoSection {
-  margin-bottom: 40px;
-  position: relative;
+  margin-bottom: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .logoCard {
-  color: white;
-  font-size: 1.2rem;
-  font-weight: 700;
-  padding: 18px 56px 18px 15px;
-  text-align: left;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 16px;
-  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.35);
+  background: rgba(255, 255, 255, 0.97);
+  border-radius: 12px;
+  padding: 7px 12px;
   display: flex;
   align-items: center;
-  justify-content: flex-start;
-  gap: 10px;
-  transition: all 0.3s ease;
+  justify-content: center;
+  flex: 1;
+  min-width: 0;
   overflow: hidden;
-  white-space: nowrap;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+}
+
+.logoMark {
+  display: block;
+  height: auto;
+  max-width: 100%;
+  object-fit: contain;
 }
 
 .logoCardCollapsed {
-  font-size: 0;
-  padding: 15px;
-  text-align: center;
-  justify-content: center;
-}
-
-.logoText {
-  overflow: hidden;
-  text-overflow: ellipsis;
+  flex: none;
+  width: 46px;
+  height: 46px;
+  padding: 6px;
+  border-radius: 12px;
 }
 
 .hamburgerButton {
-  position: absolute;
-  top: 10px;
-  right: 10px;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
   padding: 0;
-  background: rgba(255, 255, 255, 0.2);
-  border: none;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 10px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   color: white;
-  backdrop-filter: blur(10px);
-  z-index: 10;
 }
 
 .hamburgerButton:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.22);
   transform: scale(1.05);
 }
 
 .hamburgerButtonCollapsed {
-  top: 50%;
-  right: 50%;
-  transform: translate(50%, -50%);
-}
-
-.hamburgerButtonCollapsed:hover {
-  transform: translate(50%, -50%) scale(1.05);
+  width: 46px;
+  height: 38px;
 }
 
 .menu {
@@ -121,7 +113,7 @@
   background: rgba(255, 255, 255, 0.15);
   color: white;
   border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 4px 12px rgba(47, 125, 87, 0.3);
 }
 
 .menuIcon {

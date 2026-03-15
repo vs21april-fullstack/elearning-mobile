@@ -15,7 +15,7 @@
 /* Greeting */
 .greeting {
   margin-bottom: 28px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #2f7d57 0%, #1e5f42 100%);
   padding: 28px 32px;
   border-radius: 18px;
   color: #fff;
@@ -94,7 +94,7 @@
 }
 
 .badge {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #2f7d57 0%, #1e5f42 100%);
   color: #fff;
   font-size: 0.75rem;
   font-weight: 600;
@@ -126,13 +126,13 @@
 }
 
 .tabButton:hover {
-  border-color: #818cf8;
-  color: #4338ca;
+  border-color: #73b995;
+  color: #1d6b48;
   transform: translateY(-1px);
 }
 
 .tabButtonActive {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #2f7d57 0%, #1e5f42 100%);
   border-color: transparent;
   color: #fff;
 }
@@ -159,7 +159,7 @@
 
 .meetingCard:hover {
   border-color: #c4b5fd;
-  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.1);
+  box-shadow: 0 4px 16px rgba(47, 125, 87, 0.1);
 }
 
 .meetingInfo {
@@ -172,7 +172,7 @@
 .courseLabel {
   font-size: 0.88rem;
   font-weight: 600;
-  color: #4f46e5;
+  color: #2f7d57;
 }
 
 .timeLabel {
@@ -237,13 +237,13 @@
 }
 
 .filterSelect:focus {
-  border-color: #818cf8;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  border-color: #73b995;
+  box-shadow: 0 0 0 3px rgba(47, 125, 87, 0.15);
 }
 
 .filterInput:focus {
-  border-color: #818cf8;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  border-color: #73b995;
+  box-shadow: 0 0 0 3px rgba(47, 125, 87, 0.15);
 }
 
 .dateFilterRow {
@@ -265,8 +265,8 @@
 }
 
 .clearFilterButton:hover {
-  border-color: #818cf8;
-  color: #4338ca;
+  border-color: #73b995;
+  color: #1d6b48;
 }
 
 .joinBtn {
@@ -389,7 +389,7 @@
 }
 
 .calDayToday {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #2f7d57 0%, #1e5f42 100%);
   color: #fff;
   font-weight: 700;
   border-radius: 50%;

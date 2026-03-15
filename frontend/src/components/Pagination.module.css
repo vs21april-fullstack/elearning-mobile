@@ -36,8 +36,8 @@
 }
 
 .pageButton:hover:not(:disabled) {
-  border-color: #667eea;
-  color: #667eea;
+  border-color: #2f7d57;
+  color: #2f7d57;
   background: #f0f2ff;
 }
 
@@ -47,9 +47,9 @@
 }
 
 .pageButtonActive {
-  background: #667eea;
+  background: #2f7d57;
   color: white;
-  border-color: #667eea;
+  border-color: #2f7d57;
 }
 
 .pageNumber {
@@ -66,15 +66,15 @@
 }
 
 .pageNumber:hover {
-  border-color: #667eea;
-  color: #667eea;
+  border-color: #2f7d57;
+  color: #2f7d57;
   background: #f0f2ff;
 }
 
 .pageNumberActive {
-  background: #667eea;
+  background: #2f7d57;
   color: white;
-  border-color: #667eea;
+  border-color: #2f7d57;
 }
 
 .pageNumberDisabled {

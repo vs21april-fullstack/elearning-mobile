@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../app/authContext";
 import HomeIcon from "../assets/svg/HomeIcon";
@@ -6,51 +5,29 @@ import StudentIcon from "../assets/svg/StudentIcon";
 import TeacherIcon from "../assets/svg/TeacherIcon";
 import CourseIcon from "../assets/svg/CourseIcon";
 import LogoutIcon from "../assets/svg/LogoutIcon";
-import GraduationCapIcon from "../assets/svg/GraduationCapIcon";
-import HamburgerIcon from "../assets/svg/HamburgerIcon";
+import QueenAxeLogo from "../assets/svg/QueenAxeLogo";
 import styles from "./Sidebar.module.css";
 
-export default function Sidebar() {
+export default function Sidebar({ isCollapsed }) {
   const { logout, user } = useAuth();
   const role = user?.role;
-  const [isCollapsed, setIsCollapsed] = useState(() => {
-    const saved = localStorage.getItem("sidebarCollapsed");
-    return saved === "true";
-  });
-
-  useEffect(() => {
-    localStorage.setItem("sidebarCollapsed", isCollapsed);
-  }, [isCollapsed]);
-
-  const toggleSidebar = () => {
-    setIsCollapsed(!isCollapsed);
-  };
 
   return (
     <div
       className={`glass-dark ${styles.sidebar} ${isCollapsed ? styles.collapsed : ""}`}
     >
-      {/* Logo with Hamburger */}
+      {/* Logo */}
       <div className={styles.logoSection}>
-        {/* Logo */}
         <div
           className={`${styles.logoCard} ${isCollapsed ? styles.logoCardCollapsed : ""}`}
-          title={isCollapsed ? "Coaching ERP" : ""}
+          title={isCollapsed ? "QueenAxe" : ""}
         >
-          <GraduationCapIcon size={26} color="white" />
-          {!isCollapsed && (
-            <span className={styles.logoText}>Coaching ERP</span>
-          )}
+          <QueenAxeLogo
+            width={isCollapsed ? 34 : 148}
+            variant={isCollapsed ? "mark" : "full"}
+            className={styles.logoMark}
+          />
         </div>
-
-        {/* Hamburger Button - Positioned at top right */}
-        <button
-          onClick={toggleSidebar}
-          className={`${styles.hamburgerButton} ${isCollapsed ? styles.hamburgerButtonCollapsed : ""}`}
-          title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
-        >
-          <HamburgerIcon size={18} color="white" />
-        </button>
       </div>
 
       {/* Menu */}

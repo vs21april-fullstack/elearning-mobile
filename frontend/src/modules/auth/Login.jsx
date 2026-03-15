@@ -9,13 +9,12 @@ import { useNavigate } from "react-router-dom";
 import Button from "../../components/Button";
 import { FormField, PasswordField } from "../../components/FormField";
 import { toastApiError, toastSuccess } from "../../utils/toast";
-import GraduationCapIcon from "../../assets/svg/GraduationCapIcon";
 import ChartBarIcon from "../../assets/svg/ChartBarIcon";
 import UsersIcon from "../../assets/svg/UsersIcon";
 import RocketIcon from "../../assets/svg/RocketIcon";
-import BusinessPersonIcon from "../../assets/svg/BusinessPersonIcon";
 import EyeOpen from "../../assets/svg/EyeOpen";
 import EyeClosed from "../../assets/svg/EyeClosed";
+import QueenAxeLogo from "../../assets/svg/QueenAxeLogo";
 import styles from "./Login.module.css";
 
 export default function Login() {
@@ -58,33 +57,39 @@ export default function Login() {
 
         <div className={styles.brandContent}>
           <div className={styles.brandIconWrap}>
-            <GraduationCapIcon size={80} color="white" />
+            <div className={styles.brandLogoBadge}>
+              <QueenAxeLogo width={160} className={styles.brandLogoImg} />
+            </div>
           </div>
-          <h1 className={`fw-bold display-4 ${styles.brandHeading}`}>
-            Coaching ERP
+
+          <h1 className={styles.brandHeadline}>
+            Empower Your
+            <br />
+            Learning Journey
           </h1>
-          <p className={`fs-5 ${styles.brandSubheading}`}>
-            Smart Learning Management System
+          <p className={styles.brandTagline}>
+            All-in-one platform to manage students, courses, attendance &amp;
+            live virtual sessions.
           </p>
 
-          <div className={styles.featuresRow}>
-            <div className={styles.featureCard}>
-              <div className={styles.featureIcon}>
-                <ChartBarIcon size={32} color="white" />
+          <div className={styles.featureList}>
+            <div className={styles.featureItem}>
+              <div className={styles.featureItemIcon}>
+                <UsersIcon size={18} color="#2f7d57" />
               </div>
-              <div className={styles.featureText}>Analytics</div>
+              <span>Manage teachers &amp; students effortlessly</span>
             </div>
-            <div className={styles.featureCard}>
-              <div className={styles.featureIcon}>
-                <UsersIcon size={32} color="white" />
+            <div className={styles.featureItem}>
+              <div className={styles.featureItemIcon}>
+                <ChartBarIcon size={18} color="#2f7d57" />
               </div>
-              <div className={styles.featureText}>Collaboration</div>
+              <span>Track attendance, progress &amp; analytics</span>
             </div>
-            <div className={styles.featureCard}>
-              <div className={styles.featureIcon}>
-                <RocketIcon size={32} color="white" />
+            <div className={styles.featureItem}>
+              <div className={styles.featureItemIcon}>
+                <RocketIcon size={18} color="#2f7d57" />
               </div>
-              <div className={styles.featureText}>Performance</div>
+              <span>Host &amp; join live virtual sessions</span>
             </div>
           </div>
         </div>
@@ -98,7 +103,7 @@ export default function Login() {
         <div className={`glass animate-slide-in ${styles.loginCard}`}>
           <div className="text-center mb-4">
             <div className={styles.loginLogoContainer}>
-              <BusinessPersonIcon size={36} color="white" />
+              <QueenAxeLogo width={170} />
             </div>
             <h3 className={`fw-bold mb-2 ${styles.loginTitle}`}>
               Welcome Back!
@@ -151,7 +156,7 @@ export default function Login() {
 
           <div className="text-center mt-4">
             <p className={styles.footerText}>
-              © 2026 Coaching ERP. All rights reserved.
+              © 2026 QueenAxe. All rights reserved.
             </p>
           </div>
         </div>
