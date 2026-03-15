@@ -4,7 +4,6 @@ import { useAuth } from "../app/authContext";
 import HomeIcon from "../assets/svg/HomeIcon";
 import StudentIcon from "../assets/svg/StudentIcon";
 import TeacherIcon from "../assets/svg/TeacherIcon";
-import ClassIcon from "../assets/svg/ClassIcon";
 import CourseIcon from "../assets/svg/CourseIcon";
 import LogoutIcon from "../assets/svg/LogoutIcon";
 import GraduationCapIcon from "../assets/svg/GraduationCapIcon";
@@ -77,12 +76,6 @@ export default function Sidebar() {
               isCollapsed={isCollapsed}
             />
             <SidebarItem
-              to="/classes"
-              icon={<ClassIcon size={20} />}
-              label="Classes"
-              isCollapsed={isCollapsed}
-            />
-            <SidebarItem
               to="/courses"
               icon={<CourseIcon size={20} />}
               label="Courses"
@@ -95,6 +88,14 @@ export default function Sidebar() {
               isCollapsed={isCollapsed}
             />
           </>
+        )}
+        {role === "teacher" && (
+          <SidebarItem
+            to="/meetings"
+            icon={<span>📅</span>}
+            label="Meetings"
+            isCollapsed={isCollapsed}
+          />
         )}
         {/* Logout */}
         <button

@@ -1,4 +1,5 @@
 import styles from "./Button.module.css";
+import Spinner from "./Spinner";
 
 export default function Button({
   children,
@@ -21,7 +22,14 @@ export default function Button({
       disabled={isDisabled}
       {...props}
     >
-      {children}
+      <span className={loading ? styles.contentHidden : styles.content}>
+        {children}
+      </span>
+      {loading && (
+        <span className={styles.spinnerWrapper}>
+          <Spinner size="sm" variant="white" />
+        </span>
+      )}
     </button>
   );
 }

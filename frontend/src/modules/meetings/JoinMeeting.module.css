@@ -1,0 +1,310 @@
+.container {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #000;
+  position: relative;
+}
+
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-size: 1.2rem;
+}
+
+.errorContainer {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: #f5f5f5;
+}
+
+.preJoinScreen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.preJoinCard {
+  background: white;
+  border-radius: 12px;
+  padding: 32px;
+  max-width: 450px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.preJoinCard h2 {
+  margin: 0 0 24px;
+  font-size: 24px;
+  font-weight: 600;
+  color: #333;
+  text-align: center;
+}
+
+.meetingInfo {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 24px;
+  border-left: 4px solid #667eea;
+}
+
+.meetingInfo p {
+  margin: 8px 0;
+  font-size: 14px;
+  color: #555;
+}
+
+.meetingInfo strong {
+  color: #333;
+}
+
+.preJoinForm {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+.input {
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: border-color 0.2s;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.preJoinOptions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  color: #555;
+  cursor: pointer;
+  gap: 8px;
+}
+
+.checkboxLabel input[type="checkbox"] {
+  cursor: pointer;
+  width: 18px;
+  height: 18px;
+}
+
+.joinButton {
+  background: #667eea;
+  color: white;
+  padding: 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.joinButton:hover {
+  background: #5568d3;
+}
+
+.joinButton:active {
+  transform: scale(0.98);
+}
+
+.cancelButton {
+  background: #e0e0e0;
+  color: #333;
+  padding: 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.cancelButton:hover {
+  background: #d0d0d0;
+}
+
+.jitsiContainer {
+  width: 100%;
+  height: 100%;
+  flex: 1;
+}
+
+.controlsOverlay {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 16px;
+  z-index: 500;
+}
+
+.controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1400px;
+  margin: 0 auto;
+  gap: 16px;
+}
+
+.controlsLeft,
+.controlsRight {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.controlsLeft {
+  justify-content: flex-start;
+}
+
+.controlsRight {
+  justify-content: flex-end;
+}
+
+.controlsCenter {
+  flex: 0 1 auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+}
+
+.participantCount {
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  background: rgba(102, 126, 234, 0.8);
+  padding: 8px 12px;
+  border-radius: 20px;
+}
+
+.controlButton {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #667eea;
+  color: white;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.2s;
+}
+
+.controlButton:hover {
+  background: #5568d3;
+  transform: scale(1.1);
+}
+
+.controlButton:active {
+  transform: scale(0.95);
+}
+
+.controlButton.muted {
+  background: #ff4757;
+}
+
+.controlButton.muted:hover {
+  background: #ff3838;
+}
+
+.controlButton.hangup {
+  background: #ff4757;
+  width: 56px;
+  height: 56px;
+  font-size: 24px;
+}
+
+.controlButton.hangup:hover {
+  background: #ff3838;
+}
+
+.leaveButton {
+  background: #ff4757 !important;
+  color: white !important;
+  padding: 10px 20px !important;
+  border-radius: 6px !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  border: none !important;
+  cursor: pointer !important;
+  transition: background 0.2s !important;
+}
+
+.leaveButton:hover {
+  background: #ff3838 !important;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .controls {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .controlsLeft,
+  .controlsCenter,
+  .controlsRight {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .preJoinCard {
+    padding: 20px;
+  }
+
+  .preJoinCard h2 {
+    font-size: 20px;
+  }
+
+  .controlButton {
+    width: 44px;
+    height: 44px;
+    font-size: 18px;
+  }
+
+  .controlButton.hangup {
+    width: 52px;
+    height: 52px;
+    font-size: 22px;
+  }
+}

@@ -7,13 +7,33 @@ export const updateProfileSchema = yup.object({
     phone: yup.string()
         .matches(/^[0-9]{10}$/, 'Phone must be 10 digits')
         .optional(),
-    profileImage: yup.string()
-        .nullable()
-        .test(
-            'is-valid-image-path',
-            'Invalid image URL',
-            (value) => !value || /^https?:\/\//.test(value) || value.startsWith('/uploads/')
-        )
+    parents: yup.object({
+        father: yup.object({
+            name: yup.string().nullable(),
+            phone: yup.string().nullable()
+        }).nullable(),
+        mother: yup.object({
+            name: yup.string().nullable(),
+            phone: yup.string().nullable()
+        }).nullable()
+    }).nullable(),
+    teacherProfile: yup.object({
+        qualifications: yup.array().of(
+            yup.object({
+                degree: yup.string().nullable(),
+                university: yup.string().nullable()
+            })
+        ).nullable(),
+        experiences: yup.array().of(
+            yup.object({
+                title: yup.string().nullable(),
+                company: yup.string().nullable(),
+                startYear: yup.number().nullable(),
+                endYear: yup.number().nullable(),
+                isCurrent: yup.boolean().nullable()
+            })
+        ).nullable()
+    }).nullable()
 });
 
 export const changePasswordSchema = yup.object({

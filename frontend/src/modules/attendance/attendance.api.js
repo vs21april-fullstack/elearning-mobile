@@ -54,10 +54,10 @@ export const recordLogout = async () => {
     return res.data.data
 }
 
-// Get user login/logout history
-export const getUserLoginAttendance = async (startDate, endDate) => {
+// Get user login/logout history with optional role and class filters
+export const getUserLoginAttendance = async (startDate, endDate, role, classId) => {
     const res = await api.get('/attendance/login-history', {
-        params: { startDate, endDate }
+        params: { startDate, endDate, ...(role && { role }), ...(classId && { classId }) }
     })
     return res.data.data
 }

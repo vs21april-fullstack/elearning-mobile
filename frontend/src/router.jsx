@@ -4,8 +4,9 @@ import Dashboard from "./modules/dashboard/Dashboard";
 import MeetingsDashboard from "./modules/dashboard/MeetingsDashboard";
 import StudentList from "./modules/students/StudentList";
 import TeacherList from "./modules/teachers/TeacherList";
-import ClassList from "./modules/classes/ClassList";
 import CourseList from "./modules/courses/CourseList";
+import MeetingList from "./modules/meetings/MeetingList";
+import JoinMeeting from "./modules/meetings/JoinMeeting";
 import Profile from "./modules/profile/Profile";
 import Attendance from "./modules/attendance/Attendance";
 import Login from "./modules/auth/Login";
@@ -46,8 +47,9 @@ export default function Router() {
           <Route path="/dashboard" element={<RoleDashboard />} />
           <Route path="/students" element={<StudentList />} />
           <Route path="/teachers" element={<TeacherList />} />
-          <Route path="/classes" element={<ClassList />} />
           <Route path="/courses" element={<CourseList />} />
+          <Route path="/meetings" element={<MeetingList />} />
+          <Route path="/meetings/join/:meetingId" element={<JoinMeeting />} />
           <Route path="/attendance" element={<Attendance />} />
           <Route path="/profile" element={<Profile />} />
         </Route>

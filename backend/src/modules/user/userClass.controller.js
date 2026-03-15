@@ -48,7 +48,8 @@ export const unenrollStudentFromClass = async (req, reply) => {
     )
 
     if (!data) {
-        return reply.code(404).send({ message: 'Enrollment not found' })
+        // If enrollment doesn't exist, that's fine - student is already not enrolled
+        return success(reply, null, 'Student is not enrolled in this class', 200)
     }
 
     return success(reply, data, 'Student unenrolled from class successfully', 200)

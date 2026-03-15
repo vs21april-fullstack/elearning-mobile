@@ -12,34 +12,6 @@ export const getCourseColumns = (handleEdit, handleDelete) => [
     accessor: "title",
   },
   {
-    header: "Code",
-    accessor: (row) => row.code || "N/A",
-  },
-  {
-    header: "Teacher",
-    accessor: (row) => row.teacher?.name || "N/A",
-  },
-  {
-    header: "Duration",
-    accessor: (row) => `${row.duration || 0} hrs`,
-  },
-  {
-    header: "Level",
-    accessor: (row) => (
-      <span
-        className={`badge bg-${
-          row.level === "beginner"
-            ? "success"
-            : row.level === "intermediate"
-              ? "warning"
-              : "danger"
-        }`}
-      >
-        {row.level}
-      </span>
-    ),
-  },
-  {
     header: "Actions",
     accessor: "actions",
     cell: (row) => (

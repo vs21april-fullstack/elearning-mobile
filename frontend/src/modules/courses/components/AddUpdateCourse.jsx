@@ -6,11 +6,7 @@ import { createCourseSchema } from "../courses.validation";
 import { addCourse, updateCourse } from "../courses.api";
 import toast from "react-hot-toast";
 import Button from "../../../components/Button";
-import {
-  FormField,
-  TextareaField,
-  SelectField,
-} from "../../../components/FormField";
+import { FormField, TextareaField } from "../../../components/FormField";
 import modalStyles from "../../../components/Modal.module.css";
 
 export default function AddUpdateCourse({
@@ -29,9 +25,6 @@ export default function AddUpdateCourse({
     defaultValues: courseData || {
       title: "",
       description: "",
-      code: "",
-      duration: 0,
-      level: "beginner",
     },
   });
 
@@ -40,9 +33,6 @@ export default function AddUpdateCourse({
     if (courseData) {
       setValue("title", courseData.title || "");
       setValue("description", courseData.description || "");
-      setValue("code", courseData.code || "");
-      setValue("duration", courseData.duration || 0);
-      setValue("level", courseData.level || "beginner");
     }
   }, [courseData, setValue]);
 
@@ -131,47 +121,6 @@ export default function AddUpdateCourse({
                     placeholder="Enter course description"
                   />
                 </div>
-
-                {/* Code */}
-                <div className="col-md-6 mb-3">
-                  <FormField
-                    label="Course Code"
-                    name="code"
-                    control={control}
-                    errors={errors}
-                    placeholder="e.g., CS101"
-                  />
-                </div>
-
-                {/* Level */}
-                <div className="col-md-6 mb-3">
-                  <SelectField
-                    label="Level"
-                    name="level"
-                    control={control}
-                    errors={errors}
-                    options={[
-                      { value: "beginner", label: "Beginner" },
-                      { value: "intermediate", label: "Intermediate" },
-                      { value: "advanced", label: "Advanced" },
-                    ]}
-                    placeholder="Select level"
-                    required
-                  />
-                </div>
-
-                {/* Duration */}
-                <div className="col-12 mb-3">
-                  <FormField
-                    label="Duration (hours)"
-                    name="duration"
-                    control={control}
-                    errors={errors}
-                    type="number"
-                    placeholder="Enter duration in hours"
-                    required
-                  />
-                </div>
               </div>
             </div>
 
@@ -183,21 +132,13 @@ export default function AddUpdateCourse({
               >
                 Cancel
               </Button>
-              <Button variant="primary" type="submit" disabled={isLoading}>
-                {isLoading ? (
-                  <>
-                    <span
-                      className="spinner-border spinner-border-sm me-2"
-                      role="status"
-                      aria-hidden="true"
-                    ></span>
-                    {courseData ? "Updating..." : "Adding..."}
-                  </>
-                ) : courseData ? (
-                  "Update Course"
-                ) : (
-                  "Add Course"
-                )}
+              <Button
+                variant="primary"
+                type="submit"
+                disabled={isLoading}
+                loading={isLoading}
+              >
+                {courseData ? "Update Course" : "Add Course"}
               </Button>
             </div>
           </form>

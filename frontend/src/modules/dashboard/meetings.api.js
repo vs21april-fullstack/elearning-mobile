@@ -1,17 +1,17 @@
 /**
  * Meetings API
- * Fetch classes for student/teacher meetings dashboard
+ * Fetch meetings for student/teacher meetings dashboard
  */
 
 import api from "../../app/axios";
 import { API_ENDPOINTS } from "../../utils/constants";
 
-export const fetchStudentClasses = async (userId) => {
-    const res = await api.get(API_ENDPOINTS.STUDENT_CLASSES(userId));
+export const fetchMeetingsForStudent = async (studentId) => {
+    const res = await api.get(`${API_ENDPOINTS.MEETINGS}/student/${studentId}`);
     return res.data.data;
 };
 
-export const fetchTeacherClasses = async (teacherId) => {
-    const res = await api.get(API_ENDPOINTS.CLASS_TEACHER(teacherId));
+export const fetchMeetingsForTeacher = async (teacherId) => {
+    const res = await api.get(`${API_ENDPOINTS.MEETING_TEACHER(teacherId)}`);
     return res.data.data;
 };

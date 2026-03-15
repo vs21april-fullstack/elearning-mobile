@@ -23,12 +23,31 @@ export const fetchTeacherById = async (id) => {
 }
 
 export const addTeacher = async (teacherData) => {
-    const res = await api.post(API_ENDPOINTS.TEACHERS, teacherData)
+    const payload = {
+        name: teacherData.name,
+        email: teacherData.email,
+        phone: teacherData.phone,
+        password: teacherData.password,
+        teacherProfile: teacherData.teacherProfile,
+    }
+
+    const res = await api.post(API_ENDPOINTS.TEACHERS, payload)
     return res.data.data
 }
 
 export const updateTeacher = async ({ id, teacherData }) => {
-    const res = await api.put(API_ENDPOINTS.TEACHER(id), teacherData)
+    const payload = {
+        name: teacherData.name,
+        email: teacherData.email,
+        phone: teacherData.phone,
+        teacherProfile: teacherData.teacherProfile,
+    }
+
+    if (teacherData.password) {
+        payload.password = teacherData.password
+    }
+
+    const res = await api.put(API_ENDPOINTS.TEACHER(id), payload)
     return res.data.data
 }
 

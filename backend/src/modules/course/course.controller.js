@@ -8,7 +8,9 @@ import { logger } from '../../utils/logger.js'
 
 // Course Controllers
 export const createCourse = async (req, reply) => {
-    const data = await Course.create(req.body)
+    const course = await Course.create(req.body)
+    const data = await Course.findById(course._id)
+        .populate('teachers', 'name email')
     logger.info(`Course created: ${data._id}`)
     return success(reply, data, 'Course created successfully', 201)
 }
@@ -20,7 +22,7 @@ export const getCourses = async (req, reply) => {
 
     const [data, total] = await Promise.all([
         Course.find({ isActive: true })
-            .populate('teacher', 'name email')
+            .populate('teachers', 'name email')
             .skip(skip)
             .limit(limit)
             .sort('-createdAt'),
@@ -31,7 +33,8 @@ export const getCourses = async (req, reply) => {
 }
 
 export const getCourseById = async (req, reply) => {
-    const data = await Course.findById(req.params.id).populate('teacher', 'name email')
+    const data = await Course.findById(req.params.id)
+        .populate('teachers', 'name email')
     if (!data) {
         throw new NotFoundError('Course', req.params.id)
     }
@@ -44,6 +47,7 @@ export const updateCourse = async (req, reply) => {
         req.body,
         { new: true, runValidators: true }
     )
+        .populate('teachers', 'name email')
     if (!data) {
         throw new NotFoundError('Course', req.params.id)
     }
@@ -66,11 +70,11 @@ export const deleteCourse = async (req, reply) => {
 
 // UserCourse Controllers
 export const enrollStudentInCourse = async (req, reply) => {
-    const { userId, courseId } = req.body
+    const { userId, courseId, teacherId } = req.body
     // Currently allows only one active course per student
     // To enable multiple courses in the future, pass true as third parameter:
-    // await UserCourse.enrollStudent(userId, courseId, true)
-    const data = await UserCourse.enrollStudent(userId, courseId)
+    // await UserCourse.enrollStudent(userId, courseId, teacherId, true)
+    const data = await UserCourse.enrollStudent(userId, courseId, teacherId)
     return success(reply, data, 'Student enrolled in course successfully', 201)
 }
 
@@ -98,35 +102,57 @@ export const unenrollStudentFromCourse = async (req, reply) => {
         { new: true }
     )
     if (!data) {
-        throw new NotFoundError('Enrollment')
+        // If enrollment doesn't exist, that's fine - student is already not enrolled
+        return success(reply, null, 'Student is not enrolled in this course', 200)
     }
     logger.info(`Student ${userId} unenrolled from course ${courseId}`)
     return success(reply, data, 'Student unenrolled from course successfully', 200)
 }
 
 export const getCoursesByTeacher = async (req, reply) => {
-    const data = await Course.find({ teacher: req.params.teacherId, isActive: true }).populate('teacher')
+    const data = await Course.find({
+        isActive: true,
+        $or: [
+            { teacher: req.params.teacherId },
+            { teachers: req.params.teacherId }
+        ]
+    })
+        .populate('teachers', 'name email')
     return success(reply, data, 'Teacher courses fetched successfully', 200)
 }
 
 export const assignTeacherToCourses = async (req, reply) => {
     const { teacherId, courseIds } = req.body
 
-    // Remove teacher from all their current courses
+    // Remove this teacher from all currently assigned courses
     await Course.updateMany(
-        { teacher: teacherId },
-        { $unset: { teacher: "" } }
+        {
+            $or: [
+                { teacher: teacherId },
+                { teachers: teacherId }
+            ]
+        },
+        {
+            $pull: { teachers: teacherId },
+            $unset: { teacher: "" }
+        }
     )
 
-    // Assign teacher to new courses
+    // Assign teacher to selected courses (courses can have multiple teachers)
     if (courseIds && courseIds.length > 0) {
         await Course.updateMany(
             { _id: { $in: courseIds } },
-            { $set: { teacher: teacherId } }
+            { $addToSet: { teachers: teacherId } }
         )
     }
 
     logger.info(`Courses assigned to teacher: ${teacherId}`)
-    const data = await Course.find({ teacher: teacherId, isActive: true }).populate('teacher')
+    const data = await Course.find({
+        isActive: true,
+        $or: [
+            { teacher: teacherId },
+            { teachers: teacherId }
+        ]
+    }).populate('teachers', 'name email')
     return success(reply, data, 'Courses assigned to teacher successfully', 200)
 }

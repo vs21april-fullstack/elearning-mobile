@@ -1,0 +1,36 @@
+.meetingLinkLabel {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.meetingLinkContainer {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.copyButton {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.copyButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+.noteText {
+  display: block;
+  margin-top: 0.5rem;
+  color: #6c757d;
+  font-size: 0.875rem;
+}

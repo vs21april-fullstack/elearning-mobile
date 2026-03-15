@@ -13,11 +13,10 @@ const schema = new mongoose.Schema(
             trim: true
         },
 
-        code: {
-            type: String,
-            unique: true,
-            sparse: true,
-            trim: true
+        class: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Class',
+            index: true
         },
 
         teacher: {
@@ -25,16 +24,12 @@ const schema = new mongoose.Schema(
             ref: 'User'
         },
 
-        duration: {
-            type: Number, // in hours
-            default: 0
-        },
-
-        level: {
-            type: String,
-            enum: ['beginner', 'intermediate', 'advanced'],
-            default: 'beginner'
-        },
+        teachers: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'User'
+            }
+        ],
 
         isActive: {
             type: Boolean,
@@ -50,5 +45,6 @@ const schema = new mongoose.Schema(
 )
 
 schema.index({ title: 'text', description: 'text' })
+schema.index({ teachers: 1 })
 
 export default mongoose.model('Course', schema)

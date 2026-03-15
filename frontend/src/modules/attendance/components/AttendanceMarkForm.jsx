@@ -112,17 +112,9 @@ export default function AttendanceMarkForm({
               variant="primary"
               className={styles.actionButton}
               disabled={isLoading}
+              loading={isLoading}
             >
-              {isLoading ? (
-                <>
-                  <span className={styles.spinner} />
-                  {initialData ? "Updating..." : "Marking..."}
-                </>
-              ) : initialData ? (
-                "Update"
-              ) : (
-                "Mark"
-              )}
+              {initialData ? "Update" : "Mark"}
             </Button>
             <Button
               type="button"

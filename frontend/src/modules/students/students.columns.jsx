@@ -7,7 +7,11 @@ import EditIcon from "../../assets/svg/EditIcon";
 import DeleteIcon from "../../assets/svg/DeleteIcon";
 import styles from "../../styles/Columns.module.css";
 
-export const getStudentColumns = (handleEdit, handleDelete) => [
+export const getStudentColumns = (
+  handleEdit,
+  handleDelete,
+  handleManageCourses,
+) => [
   {
     header: "Student",
     accessor: "name",
@@ -45,6 +49,13 @@ export const getStudentColumns = (handleEdit, handleDelete) => [
           className={`${styles.actionButton} ${styles.buttonEdit}`}
         >
           <EditIcon size={16} color="white" /> Edit
+        </button>
+        <button
+          onClick={() => handleManageCourses(row)}
+          className={`${styles.actionButton} ${styles.buttonInfo}`}
+          title="Manage Courses"
+        >
+          📚 Courses
         </button>
         <button
           onClick={() => handleDelete(row)}

@@ -47,6 +47,24 @@ const schema = new mongoose.Schema(
       default: null,
     },
 
+    teacherProfile: {
+      qualifications: [
+        {
+          degree: String,
+          university: String,
+        },
+      ],
+      experiences: [
+        {
+          title: String,
+          company: String,
+          startYear: Number,
+          endYear: Number,
+          isCurrent: Boolean,
+        },
+      ],
+    },
+
     isActive: {
       type: Boolean,
       default: true,
@@ -92,7 +110,8 @@ schema.statics.createStudent = async function (payload) {
 
   const exists = await this.checkDuplicate({ email, phone });
   if (exists) {
-    const err = new Error("Student already exists");
+    const field = exists.email === email ? 'email' : 'phone';
+    const err = new Error(`User with this ${field} already exists`);
     err.statusCode = 409;
     throw err;
   }
@@ -125,7 +144,8 @@ schema.statics.createTeacher = async function (payload) {
 
   const exists = await this.checkDuplicate({ email, phone });
   if (exists) {
-    const err = new Error("Teacher already exists");
+    const field = exists.email === email ? 'email' : 'phone';
+    const err = new Error(`User with this ${field} already exists`);
     err.statusCode = 409;
     throw err;
   }

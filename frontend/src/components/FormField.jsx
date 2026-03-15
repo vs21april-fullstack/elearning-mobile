@@ -176,22 +176,41 @@ export function SelectField({
       <Controller
         name={name}
         control={control}
-        render={({ field }) => (
-          <SelectComponent
-            {...field}
-            {...props}
-            options={options}
-            value={field.value}
-            onChange={(option) =>
-              field.onChange(isMulti ? option : option?.value || "")
-            }
-            isClearable={isClearable}
-            isMulti={isMulti}
-            placeholder={placeholder}
-            styles={selectStyles}
-            error={!!error}
-          />
-        )}
+        render={({ field }) =>
+          SelectComponent ? (
+            <SelectComponent
+              {...field}
+              {...props}
+              options={options}
+              value={field.value}
+              onChange={(option) =>
+                field.onChange(isMulti ? option : option?.value || "")
+              }
+              isClearable={isClearable}
+              isMulti={isMulti}
+              placeholder={placeholder}
+              styles={selectStyles}
+              error={!!error}
+            />
+          ) : (
+            <select
+              {...field}
+              {...props}
+              className={`${styles.inputBase} ${error ? styles.inputError : ""}`}
+            >
+              {placeholder && (
+                <option value="" disabled>
+                  {placeholder}
+                </option>
+              )}
+              {options?.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          )
+        }
       />
       {error && <div className={styles.error}>{error.message}</div>}
     </div>

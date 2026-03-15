@@ -1,5 +1,6 @@
 import mongoose from 'mongoose'
 import User from './user.model.js'
+import Parents from '../parents/parents.model.js'
 import { success, successWithPagination } from '../../utils/response.js'
 import { NotFoundError, ConflictError } from '../../utils/customErrors.js'
 import { PAGINATION } from '../../utils/constants.js'
@@ -52,11 +53,29 @@ export const getStudentById = async (req, reply) => {
 }
 
 export const updateStudent = async (req, reply) => {
-  const { password, ...updateData } = req.body
+  const { password, parents, ...updateData } = req.body
 
   if (password) {
     const bcrypt = await import('bcrypt')
     updateData.password = await bcrypt.hash(password, 10)
+  }
+
+  // Handle parents data separately
+  if (parents) {
+    const existingParents = await Parents.findByStudent(req.params.id)
+
+    if (existingParents) {
+      // Update existing parents document
+      await Parents.findOneAndUpdate(
+        { student: req.params.id },
+        parents,
+        { new: true, runValidators: true }
+      )
+    } else {
+      // Create new parents document
+      const parentsDoc = await Parents.createForStudent(req.params.id, parents)
+      updateData.parents = parentsDoc._id
+    }
   }
 
   const student = await User.findOneAndUpdate(
@@ -133,7 +152,7 @@ export const getTeacherById = async (req, reply) => {
 }
 
 export const updateTeacher = async (req, reply) => {
-  const { password, ...updateData } = req.body
+  const { password, parents, ...updateData } = req.body
 
   if (password) {
     const bcrypt = await import('bcrypt')

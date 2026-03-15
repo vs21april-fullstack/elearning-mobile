@@ -6,6 +6,7 @@ import DataTable from "../../components/DataTable";
 import Spinner from "../../components/Spinner";
 import Pagination from "../../components/Pagination";
 import AddUpdateStudent from "./components/AddUpdateStudent";
+import ManageCourses from "./components/ManageCourses";
 import Button from "../../components/Button";
 import toast from "react-hot-toast";
 import styles from "./StudentList.module.css";
@@ -13,6 +14,8 @@ import styles from "./StudentList.module.css";
 export default function StudentList() {
   const [showForm, setShowForm] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
+  const [showManageCourses, setShowManageCourses] = useState(false);
+  const [studentForCourses, setStudentForCourses] = useState(null);
   const [page, setPage] = useState(1);
   const limit = 10;
 
@@ -64,9 +67,14 @@ export default function StudentList() {
     [deleteMutation],
   );
 
+  const handleManageCourses = useCallback((student) => {
+    setStudentForCourses(student);
+    setShowManageCourses(true);
+  }, []);
+
   const columns = useMemo(
-    () => getStudentColumns(handleEdit, handleDelete),
-    [handleEdit, handleDelete],
+    () => getStudentColumns(handleEdit, handleDelete, handleManageCourses),
+    [handleEdit, handleDelete, handleManageCourses],
   );
 
   const handleAddNew = useCallback(() => {
@@ -140,6 +148,16 @@ export default function StudentList() {
           student={selectedStudent}
           onClose={handleCloseForm}
           onSuccess={handleFormSuccess}
+        />
+      )}
+
+      {showManageCourses && studentForCourses && (
+        <ManageCourses
+          student={studentForCourses}
+          onClose={() => {
+            setShowManageCourses(false);
+            setStudentForCourses(null);
+          }}
         />
       )}
     </div>

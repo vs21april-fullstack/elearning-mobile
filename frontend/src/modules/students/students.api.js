@@ -6,6 +6,26 @@
 import api from '../../app/axios'
 import { API_ENDPOINTS } from '../../utils/constants'
 
+const normalizeParentDetails = (parents) => {
+    if (!parents || typeof parents !== 'object') return null
+
+    const normalizePerson = (person) => {
+        if (!person || typeof person !== 'object') return null
+
+        const name = typeof person.name === 'string' ? person.name.trim() : ''
+        const phone = typeof person.phone === 'string' ? person.phone.trim() : ''
+
+        if (!name && !phone) return null
+        return { ...(name ? { name } : {}), ...(phone ? { phone } : {}) }
+    }
+
+    const father = normalizePerson(parents.father)
+    const mother = normalizePerson(parents.mother)
+
+    if (!father && !mother) return null
+    return { ...(father ? { father } : {}), ...(mother ? { mother } : {}) }
+}
+
 export const fetchStudents = async (params = {}) => {
     const { page = 1, limit = 10 } = params
     const res = await api.get(API_ENDPOINTS.STUDENTS, {
@@ -22,28 +42,18 @@ export const fetchStudentById = async (id) => {
     return res.data.data
 }
 
-export const fetchClasses = async () => {
-    const res = await api.get(API_ENDPOINTS.CLASSES)
-    return res.data.data
-}
-
 export const fetchCourses = async () => {
     const res = await api.get(API_ENDPOINTS.COURSES)
     return res.data.data
 }
 
-export const enrollStudentInClass = async ({ userId, classId }) => {
-    const res = await api.post(API_ENDPOINTS.ENROLL_CLASS, { userId, classId })
+export const enrollStudentInCourse = async ({ userId, courseId, teacherId }) => {
+    const res = await api.post(API_ENDPOINTS.ENROLL_COURSE, { userId, courseId, teacherId })
     return res.data.data
 }
 
-export const enrollStudentInCourse = async ({ userId, courseId }) => {
-    const res = await api.post(API_ENDPOINTS.ENROLL_COURSE, { userId, courseId })
-    return res.data.data
-}
-
-export const getStudentClasses = async (userId) => {
-    const res = await api.get(API_ENDPOINTS.STUDENT_CLASSES(userId))
+export const unenrollStudentFromCourse = async ({ userId, courseId }) => {
+    const res = await api.delete(API_ENDPOINTS.UNENROLL_COURSE(userId, courseId))
     return res.data.data
 }
 
@@ -52,39 +62,17 @@ export const getStudentCourses = async (userId) => {
     return res.data.data
 }
 
-// Upload image to backend (local or S3)
-export async function uploadImage({ file, type = 'local' }) {
-    const formData = new FormData();
-    formData.append('file', file);
-    // type: 'local' or 's3'
-    const url = type === 's3' ? '/upload/s3' : '/upload/local';
-    const response = await api.post(url, formData, {
-        headers: {
-            'Content-Type': 'multipart/form-data',
-        },
-    });
-    const uploadData = response.data?.data || response.data || {};
-    const filepath = uploadData.filepath || uploadData.path || uploadData.url || '';
-
-    return {
-        ...uploadData,
-        filepath,
-        path: uploadData.path || filepath,
-        url: uploadData.url || filepath,
-    };
-}
-
 export const addStudent = async (studentData) => {
     const payload = {
         name: studentData.name,
         email: studentData.email,
         phone: studentData.phone,
-        password: studentData.password,
-        parents: studentData.parents
+        password: studentData.password
     }
 
-    if (studentData.image) {
-        payload.profileImage = studentData.image
+    const normalizedParents = normalizeParentDetails(studentData.parents)
+    if (normalizedParents) {
+        payload.parents = normalizedParents
     }
 
     const res = await api.post(API_ENDPOINTS.STUDENTS, payload)
@@ -95,16 +83,16 @@ export const updateStudent = async ({ id, studentData }) => {
     const payload = {
         name: studentData.name,
         email: studentData.email,
-        phone: studentData.phone,
-        parents: studentData.parents
+        phone: studentData.phone
+    }
+
+    const normalizedParents = normalizeParentDetails(studentData.parents)
+    if (normalizedParents) {
+        payload.parents = normalizedParents
     }
 
     if (studentData.password) {
         payload.password = studentData.password
-    }
-
-    if (studentData.image) {
-        payload.profileImage = studentData.image
     }
 
     const res = await api.put(API_ENDPOINTS.STUDENT(id), payload)

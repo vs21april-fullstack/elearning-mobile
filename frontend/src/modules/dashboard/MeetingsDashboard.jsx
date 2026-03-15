@@ -1,12 +1,14 @@
-import { useState, useMemo } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../app/authContext";
-import { fetchStudentClasses, fetchTeacherClasses } from "./meetings.api";
-import { generateAuthorizedMeetingLink } from "../classes/classes.api";
+import {
+  fetchMeetingsForStudent,
+  fetchMeetingsForTeacher,
+} from "./meetings.api";
 import Spinner from "../../components/Spinner";
 import Button from "../../components/Button";
-import { toastApiError, toastSuccess } from "../../utils/toast";
-import ClassIcon from "../../assets/svg/ClassIcon";
+import Pagination from "../../components/Pagination";
 import styles from "./MeetingsDashboard.module.css";
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -24,6 +26,21 @@ const MONTHS = [
   "November",
   "December",
 ];
+const MEETINGS_PER_PAGE = 5;
+
+function getDateFilterValue(dateValue) {
+  const date = new Date(dateValue);
+
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, "0");
+  const day = `${date.getDate()}`.padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
 
 function getCalendarDays(year, month) {
   const firstDay = new Date(year, month, 1).getDay();
@@ -32,41 +49,181 @@ function getCalendarDays(year, month) {
 
   for (let i = 0; i < firstDay; i++) days.push(null);
   for (let d = 1; d <= daysInMonth; d++) days.push(d);
+
   return days;
+}
+
+function parseMeetingDateTime(
+  dateValue,
+  timeValue,
+  fallbackHours = 0,
+  fallbackMinutes = 0,
+) {
+  const parsedDate = new Date(dateValue);
+
+  if (Number.isNaN(parsedDate.getTime())) {
+    return new Date(0);
+  }
+
+  const [hoursText, minutesText] = (timeValue || "").split(":");
+  const hours = Number.parseInt(hoursText, 10);
+  const minutes = Number.parseInt(minutesText, 10);
+
+  parsedDate.setHours(
+    Number.isNaN(hours) ? fallbackHours : hours,
+    Number.isNaN(minutes) ? fallbackMinutes : minutes,
+    0,
+    0,
+  );
+
+  return parsedDate;
 }
 
 export default function MeetingsDashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const isTeacher = user?.role === "teacher";
   const [now] = useState(() => new Date());
   const [calMonth, setCalMonth] = useState(now.getMonth());
   const [calYear, setCalYear] = useState(now.getFullYear());
-  const [joiningId, setJoiningId] = useState(null);
+  const [selectedCourseId, setSelectedCourseId] = useState("all");
+  const [selectedDate, setSelectedDate] = useState("");
+  const [activeTab, setActiveTab] = useState("upcoming");
+  const [upcomingPage, setUpcomingPage] = useState(1);
+  const [pastPage, setPastPage] = useState(1);
 
-  const { data: classes = [], isLoading } = useQuery({
-    queryKey: [isTeacher ? "teacherClasses" : "studentClasses", user?.id],
+  const { data: meetings = [], isLoading: meetingsLoading } = useQuery({
+    queryKey: [isTeacher ? "teacherMeetings" : "studentMeetings", user?.id],
     queryFn: () =>
-      isTeacher ? fetchTeacherClasses(user.id) : fetchStudentClasses(user.id),
+      isTeacher
+        ? fetchMeetingsForTeacher(user.id)
+        : fetchMeetingsForStudent(user.id),
     enabled: !!user?.id,
   });
 
-  const joinMutation = useMutation({
-    mutationFn: generateAuthorizedMeetingLink,
-    onSuccess: (data) => {
-      const url = data?.meetingLink || data?.url || data;
-      if (url) {
-        window.open(url, "_blank", "noopener");
-        toastSuccess("Joining meeting…");
-      }
-    },
-    onError: (err) => toastApiError(err),
-    onSettled: () => setJoiningId(null),
-  });
+  const courseOptions = useMemo(() => {
+    const courseMap = new Map();
 
-  const handleJoin = (classId) => {
-    setJoiningId(classId);
-    joinMutation.mutate(classId);
-  };
+    meetings.forEach((meeting) => {
+      if (meeting.course?._id && !courseMap.has(meeting.course._id)) {
+        courseMap.set(
+          meeting.course._id,
+          meeting.course.title || "Untitled Course",
+        );
+      }
+    });
+
+    return Array.from(courseMap.entries())
+      .map(([id, title]) => ({ id, title }))
+      .sort((a, b) => a.title.localeCompare(b.title));
+  }, [meetings]);
+
+  const filteredMeetings = useMemo(() => {
+    return meetings.filter((meeting) => {
+      const matchesCourse =
+        selectedCourseId === "all" || meeting.course?._id === selectedCourseId;
+      const matchesDate =
+        !selectedDate || getDateFilterValue(meeting.date) === selectedDate;
+
+      return matchesCourse && matchesDate;
+    });
+  }, [meetings, selectedCourseId, selectedDate]);
+
+  const upcomingMeetings = useMemo(() => {
+    return filteredMeetings
+      .filter(
+        (meeting) =>
+          parseMeetingDateTime(meeting.date, meeting.endTime, 23, 59) >= now,
+      )
+      .sort((a, b) => {
+        const dateDiff =
+          parseMeetingDateTime(a.date, a.startTime) -
+          parseMeetingDateTime(b.date, b.startTime);
+
+        if (dateDiff !== 0) {
+          return dateDiff;
+        }
+
+        return (a.startTime || "").localeCompare(b.startTime || "");
+      });
+  }, [filteredMeetings, now]);
+
+  const pastMeetings = useMemo(() => {
+    return filteredMeetings
+      .filter(
+        (meeting) =>
+          parseMeetingDateTime(meeting.date, meeting.endTime, 23, 59) < now,
+      )
+      .sort(
+        (a, b) =>
+          parseMeetingDateTime(b.date, b.startTime) -
+          parseMeetingDateTime(a.date, a.startTime),
+      );
+  }, [filteredMeetings, now]);
+
+  const filteredUpcomingMeetings = upcomingMeetings;
+
+  const filteredPastMeetings = pastMeetings;
+
+  const upcomingTotalPages = Math.max(
+    1,
+    Math.ceil(filteredUpcomingMeetings.length / MEETINGS_PER_PAGE),
+  );
+  const pastTotalPages = Math.max(
+    1,
+    Math.ceil(filteredPastMeetings.length / MEETINGS_PER_PAGE),
+  );
+
+  const paginatedUpcomingMeetings = useMemo(() => {
+    const startIndex = (upcomingPage - 1) * MEETINGS_PER_PAGE;
+
+    return filteredUpcomingMeetings.slice(
+      startIndex,
+      startIndex + MEETINGS_PER_PAGE,
+    );
+  }, [filteredUpcomingMeetings, upcomingPage]);
+
+  const paginatedPastMeetings = useMemo(() => {
+    const startIndex = (pastPage - 1) * MEETINGS_PER_PAGE;
+
+    return filteredPastMeetings.slice(
+      startIndex,
+      startIndex + MEETINGS_PER_PAGE,
+    );
+  }, [filteredPastMeetings, pastPage]);
+
+  const activeMeetings =
+    activeTab === "upcoming"
+      ? paginatedUpcomingMeetings
+      : paginatedPastMeetings;
+  const activeMeetingsCount =
+    activeTab === "upcoming"
+      ? filteredUpcomingMeetings.length
+      : filteredPastMeetings.length;
+  const currentPage = activeTab === "upcoming" ? upcomingPage : pastPage;
+  const totalPages =
+    activeTab === "upcoming" ? upcomingTotalPages : pastTotalPages;
+  const totalItems =
+    activeTab === "upcoming"
+      ? filteredUpcomingMeetings.length
+      : filteredPastMeetings.length;
+
+  useEffect(() => {
+    setUpcomingPage(1);
+    setPastPage(1);
+  }, [selectedCourseId, selectedDate]);
+
+  useEffect(() => {
+    if (upcomingPage > upcomingTotalPages) {
+      setUpcomingPage(upcomingTotalPages);
+    }
+  }, [upcomingPage, upcomingTotalPages]);
+
+  useEffect(() => {
+    if (pastPage > pastTotalPages) {
+      setPastPage(pastTotalPages);
+    }
+  }, [pastPage, pastTotalPages]);
 
   const calendarDays = useMemo(
     () => getCalendarDays(calYear, calMonth),
@@ -76,17 +233,22 @@ export default function MeetingsDashboard() {
   const prevMonth = () => {
     if (calMonth === 0) {
       setCalMonth(11);
-      setCalYear((y) => y - 1);
-    } else setCalMonth((m) => m - 1);
+      setCalYear((year) => year - 1);
+    } else {
+      setCalMonth((month) => month - 1);
+    }
   };
+
   const nextMonth = () => {
     if (calMonth === 11) {
       setCalMonth(0);
-      setCalYear((y) => y + 1);
-    } else setCalMonth((m) => m + 1);
+      setCalYear((year) => year + 1);
+    } else {
+      setCalMonth((month) => month + 1);
+    }
   };
 
-  if (isLoading) {
+  if (meetingsLoading) {
     return (
       <div className={styles.loadingContainer}>
         <Spinner />
@@ -96,76 +258,169 @@ export default function MeetingsDashboard() {
 
   return (
     <div className={styles.container}>
-      {/* Greeting */}
       <div className={styles.greeting}>
         <h2 className={styles.greetingTitle}>
           Welcome Back{user?.name ? `, ${user.name}` : ""}!
         </h2>
         <p className={styles.greetingSubtitle}>
           {isTeacher
-            ? "Here are your classes. Start or join a meeting anytime."
-            : "Here are your enrolled classes. Join live meetings below."}
+            ? "Here are your meetings. Start or join anytime."
+            : "Here are your meetings. Join live sessions below."}
         </p>
       </div>
 
       <div className={styles.grid}>
-        {/* Classes / Meetings List */}
         <div className={styles.meetingsSection}>
-          <h4 className={styles.sectionTitle}>
-            <ClassIcon size={20} />
-            <span>My Classes</span>
-            <span className={styles.badge}>{classes.length}</span>
-          </h4>
+          <div className={styles.sectionHeader}>
+            <div className={styles.sectionHeadingGroup}>
+              <h4 className={styles.sectionTitle}>
+                <span>📅 Meetings</span>
+                <span className={styles.badge}>{activeMeetingsCount}</span>
+              </h4>
 
-          {classes.length === 0 ? (
-            <div className={styles.emptyState}>
-              <ClassIcon size={48} />
-              <p>
-                {isTeacher
-                  ? "No classes assigned to you yet."
-                  : "You are not enrolled in any classes yet."}
-              </p>
+              <div className={styles.tabRow}>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("upcoming")}
+                  className={`${styles.tabButton} ${activeTab === "upcoming" ? styles.tabButtonActive : ""}`}
+                >
+                  Upcoming
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("past")}
+                  className={`${styles.tabButton} ${activeTab === "past" ? styles.tabButtonActive : ""}`}
+                >
+                  Past
+                </button>
+              </div>
             </div>
-          ) : (
+
+            <div className={styles.filtersRow}>
+              {courseOptions.length > 0 && (
+                <div className={styles.filterGroup}>
+                  <label
+                    htmlFor="dashboard-course-filter"
+                    className={styles.filterLabel}
+                  >
+                    Course
+                  </label>
+                  <select
+                    id="dashboard-course-filter"
+                    value={selectedCourseId}
+                    onChange={(e) => setSelectedCourseId(e.target.value)}
+                    className={styles.filterSelect}
+                  >
+                    <option value="all">All Courses</option>
+                    {courseOptions.map((course) => (
+                      <option key={course.id} value={course.id}>
+                        {course.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <div className={styles.filterGroup}>
+                <label
+                  htmlFor="dashboard-date-filter"
+                  className={styles.filterLabel}
+                >
+                  Date
+                </label>
+                <div className={styles.dateFilterRow}>
+                  <input
+                    id="dashboard-date-filter"
+                    type="date"
+                    value={selectedDate}
+                    onChange={(e) => setSelectedDate(e.target.value)}
+                    className={styles.filterInput}
+                  />
+                  {selectedDate && (
+                    <button
+                      type="button"
+                      onClick={() => setSelectedDate("")}
+                      className={styles.clearFilterButton}
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {activeMeetings.length > 0 ? (
             <div className={styles.meetingsList}>
-              {classes.map((cls) => {
-                const classData = cls.class || cls; // handle populated join-table shape
-                const classId = classData._id || classData.id;
-                const teacherName =
-                  classData.teacher?.name || classData.teacher?.email || "—";
+              {activeMeetings.map((meeting) => {
+                const meetingDate = new Date(meeting.date);
+                const isToday =
+                  meetingDate.getDate() === now.getDate() &&
+                  meetingDate.getMonth() === now.getMonth() &&
+                  meetingDate.getFullYear() === now.getFullYear();
 
                 return (
-                  <div key={classId} className={styles.meetingCard}>
+                  <div key={meeting._id} className={styles.meetingCard}>
                     <div className={styles.meetingInfo}>
-                      <h5 className={styles.meetingTitle}>{classData.title}</h5>
-                      {!isTeacher && (
+                      <h5 className={styles.meetingTitle}>{meeting.title}</h5>
+                      <span className={styles.courseLabel}>
+                        {meeting.course?.title || "N/A"}
+                      </span>
+                      {meeting.teacher && (
                         <span className={styles.teacherLabel}>
-                          Teacher: {teacherName}
+                          Teacher:{" "}
+                          {meeting.teacher.name || meeting.teacher.email}
                         </span>
                       )}
-                      {classData.totalHours && (
-                        <span className={styles.hoursLabel}>
-                          {classData.totalHours}h total
-                        </span>
-                      )}
+                      <span
+                        className={`${styles.timeLabel} ${isToday ? styles.todayLabel : ""}`}
+                      >
+                        {isToday
+                          ? "🔔 Today"
+                          : meetingDate.toLocaleDateString()}{" "}
+                        at {meeting.startTime}
+                      </span>
                     </div>
+
                     <Button
                       variant="primary"
-                      onClick={() => handleJoin(classId)}
-                      loading={joiningId === classId}
-                      disabled={joiningId === classId}
+                      onClick={() =>
+                        navigate(`/meetings/join/${meeting._id}`, {
+                          state: { autoJoin: true },
+                        })
+                      }
                       className={styles.joinBtn}
+                      disabled={activeTab === "past"}
                     >
-                      {joiningId === classId ? "Joining…" : "Join Meeting"}
+                      {activeTab === "past" ? "Completed" : "📞 Join"}
                     </Button>
                   </div>
                 );
               })}
+
+              <div className={styles.paginationWrapper}>
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  totalItems={totalItems}
+                  itemsPerPage={MEETINGS_PER_PAGE}
+                  onPageChange={
+                    activeTab === "upcoming" ? setUpcomingPage : setPastPage
+                  }
+                />
+              </div>
+            </div>
+          ) : (
+            <div className={styles.emptyState}>
+              <p>
+                {activeTab === "upcoming"
+                  ? "No upcoming meetings found for the selected filters."
+                  : "No past meetings found for the selected filters."}
+              </p>
             </div>
           )}
         </div>
 
-        {/* Calendar */}
         <div className={styles.calendarSection}>
           <div className={styles.calendarHeader}>
             <button onClick={prevMonth} className={styles.calNavBtn}>
@@ -180,12 +435,13 @@ export default function MeetingsDashboard() {
           </div>
 
           <div className={styles.calendarGrid}>
-            {WEEKDAYS.map((d) => (
-              <div key={d} className={styles.calWeekday}>
-                {d}
+            {WEEKDAYS.map((day) => (
+              <div key={day} className={styles.calWeekday}>
+                {day}
               </div>
             ))}
-            {calendarDays.map((day, i) => {
+
+            {calendarDays.map((day, index) => {
               const isToday =
                 day === now.getDate() &&
                 calMonth === now.getMonth() &&
@@ -193,7 +449,7 @@ export default function MeetingsDashboard() {
 
               return (
                 <div
-                  key={i}
+                  key={index}
                   className={`${styles.calDay} ${!day ? styles.calDayEmpty : ""} ${isToday ? styles.calDayToday : ""}`}
                 >
                   {day}

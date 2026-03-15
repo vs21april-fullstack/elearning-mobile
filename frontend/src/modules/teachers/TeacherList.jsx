@@ -7,12 +7,15 @@ import Spinner from "../../components/Spinner";
 import Pagination from "../../components/Pagination";
 import Button from "../../components/Button";
 import AddUpdateTeacher from "./components/AddUpdateTeacher";
+import ManageTeacherCourses from "./components/ManageTeacherCourses";
 import toast from "react-hot-toast";
 import styles from "./TeachersList.module.css";
 
 export default function TeacherList() {
   const [showModal, setShowModal] = useState(false);
+  const [showAssignModal, setShowAssignModal] = useState(false);
   const [selectedTeacher, setSelectedTeacher] = useState(null);
+  const [assignTeacher, setAssignTeacher] = useState(null);
   const [page, setPage] = useState(1);
   const limit = 10;
   const queryClient = useQueryClient();
@@ -67,9 +70,19 @@ export default function TeacherList() {
     [deleteMutation],
   );
 
+  const handleAssign = useCallback((teacher) => {
+    setAssignTeacher(teacher);
+    setShowAssignModal(true);
+  }, []);
+
   const handleModalClose = useCallback(() => {
     setShowModal(false);
     setSelectedTeacher(null);
+  }, []);
+
+  const handleAssignModalClose = useCallback(() => {
+    setShowAssignModal(false);
+    setAssignTeacher(null);
   }, []);
 
   const handleSuccess = useCallback(() => {
@@ -77,8 +90,8 @@ export default function TeacherList() {
   }, [queryClient]);
 
   const columns = useMemo(
-    () => getTeacherColumns(handleEdit, handleDelete),
-    [handleEdit, handleDelete],
+    () => getTeacherColumns(handleEdit, handleDelete, handleAssign),
+    [handleEdit, handleDelete, handleAssign],
   );
 
   return (
@@ -137,6 +150,14 @@ export default function TeacherList() {
         <AddUpdateTeacher
           teacher={selectedTeacher}
           onClose={handleModalClose}
+          onSuccess={handleSuccess}
+        />
+      )}
+
+      {showAssignModal && assignTeacher && (
+        <ManageTeacherCourses
+          teacher={assignTeacher}
+          onClose={handleAssignModalClose}
           onSuccess={handleSuccess}
         />
       )}

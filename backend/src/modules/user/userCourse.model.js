@@ -26,6 +26,13 @@ const schema = new mongoose.Schema(
             index: true
         },
 
+        teacher: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+            default: null,
+            index: true
+        },
+
         enrolledAt: {
             type: Date,
             default: Date.now
@@ -69,34 +76,74 @@ const schema = new mongoose.Schema(
 schema.index({ user: 1, course: 1 }, { unique: true })
 
 // Static methods
-schema.statics.enrollStudent = async function (userId, courseId, allowMultiple = false) {
+schema.statics.enrollStudent = async function (userId, courseId, teacherId = null, skipActiveCheck = false) {
+    const Course = mongoose.model('Course')
+    const course = await Course.findOne({ _id: courseId, isActive: true }).select('teacher teachers')
+
+    if (!course) {
+        const err = new Error('Course not found')
+        err.statusCode = 404
+        throw err
+    }
+
+    const primaryTeacherId = course.teacher || (Array.isArray(course.teachers) ? course.teachers[0] : null)
+    const resolvedTeacherId = teacherId || primaryTeacherId || null
+
+    const isTeacherAssigned = !!teacherId && (
+        String(course.teacher || '') === String(teacherId) ||
+        (Array.isArray(course.teachers) && course.teachers.some((id) => String(id) === String(teacherId)))
+    )
+
+    if (teacherId && !isTeacherAssigned) {
+        const err = new Error('Selected teacher is not assigned to this course')
+        err.statusCode = 400
+        throw err
+    }
+
     // Check if already enrolled in this course
     const existing = await this.findOne({ user: userId, course: courseId })
     if (existing) {
+        // If already enrolled but dropped, reactivate
+        if (existing.status === 'dropped') {
+            existing.status = 'enrolled'
+            existing.teacher = resolvedTeacherId
+            return existing.save()
+        }
         const err = new Error('Student already enrolled in this course')
         err.statusCode = 409
         throw err
     }
 
-    // Check if student has an active course enrollment (one course at a time for now)
-    if (!allowMultiple) {
-        const activeCourse = await this.findOne({
-            user: userId,
-            status: { $in: ['enrolled', 'in-progress'] }
-        })
-        if (activeCourse) {
-            const err = new Error('Student already enrolled in an active course. Complete or drop the current course first.')
-            err.statusCode = 409
-            throw err
+    // Note: Removed single active course restriction
+    // Students can now be enrolled in multiple courses simultaneously
+    return this.create({ user: userId, course: courseId, teacher: resolvedTeacherId, status: 'enrolled' })
+}
+
+// Enroll student in all courses of a class
+schema.statics.enrollStudentInClassCourses = async function (userId, classId) {
+    const Course = mongoose.model('Course')
+    const courses = await Course.find({ class: classId, isActive: true }).select('_id')
+
+    const enrollments = []
+    for (const course of courses) {
+        try {
+            const enrollment = await this.enrollStudent(userId, course._id, null, true)
+            enrollments.push(enrollment)
+        } catch (err) {
+            // Skip if already enrolled
+            if (err.statusCode !== 409) {
+                throw err
+            }
         }
     }
 
-    return this.create({ user: userId, course: courseId, status: 'enrolled' })
+    return enrollments
 }
 
 schema.statics.getStudentCourses = function (userId) {
     return this.find({ user: userId })
         .populate('course')
+        .populate('teacher', 'name email')
         .sort('-enrolledAt')
 }
 

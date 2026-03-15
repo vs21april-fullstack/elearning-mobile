@@ -13,12 +13,10 @@ const schema = new mongoose.Schema(
     father: {
       name: {
         type: String,
-        required: true,
         trim: true
       },
       phone: {
         type: String,
-        required: true,
         trim: true
       },
       occupation: {

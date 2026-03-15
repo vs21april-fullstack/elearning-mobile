@@ -8,9 +8,9 @@ export const createStudentSchema = yup.object({
 
   parents: yup.object({
     father: yup.object({
-      name: yup.string().required(),
-      phone: yup.string().required()
-    }).required(),
+      name: yup.string().nullable(),
+      phone: yup.string().nullable()
+    }).nullable(),
 
     mother: yup.object({
       name: yup.string().nullable(),
@@ -36,9 +36,7 @@ export const createTeacherSchema = yup.object({
     qualifications: yup.array().of(
       yup.object({
         degree: yup.string().required(),
-        university: yup.string().required(),
-        startYear: yup.number().required(),
-        endYear: yup.number().required()
+        university: yup.string().required()
       })
     ).required(),
     experiences: yup.array().of(
@@ -64,9 +62,7 @@ export const updateUserSchema = yup.object({
     qualifications: yup.array().of(
       yup.object({
         degree: yup.string(),
-        university: yup.string(),
-        startYear: yup.number(),
-        endYear: yup.number()
+        university: yup.string()
       })
     ),
     experiences: yup.array().of(
@@ -81,12 +77,12 @@ export const updateUserSchema = yup.object({
   }),
   parents: yup.object({
     father: yup.object({
-      name: yup.string(),
-      phone: yup.string()
-    }),
+      name: yup.string().nullable(),
+      phone: yup.string().nullable()
+    }).nullable(),
     mother: yup.object({
-      name: yup.string(),
-      phone: yup.string()
-    })
-  })
+      name: yup.string().nullable(),
+      phone: yup.string().nullable()
+    }).nullable()
+  }).nullable()
 })

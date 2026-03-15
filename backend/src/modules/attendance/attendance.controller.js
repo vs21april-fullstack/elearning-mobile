@@ -1,4 +1,7 @@
 import Attendance from './attendance.model.js'
+import User from '../user/user.model.js'
+import UserClass from '../user/userClass.model.js'
+import Class from '../class/class.model.js'
 import { success } from '../../utils/response.js'
 
 // Mark single attendance
@@ -160,19 +163,45 @@ export const recordLogout = async (req, reply) => {
 
 // Get user login attendance (teachers and students login history)
 export const getUserLoginAttendance = async (req, reply) => {
-    const userId = req.user.id
-    const { startDate, endDate } = req.query
+    const { startDate, endDate, role, classId } = req.query
 
     if (!startDate || !endDate) {
         return reply.code(400).send({ message: 'startDate and endDate are required' })
     }
 
     try {
-        const attendance = await Attendance.getUserLoginAttendance(
-            userId,
-            new Date(startDate),
-            new Date(endDate)
-        ).populate('user', 'name email role')
+        const query = {
+            type: 'login',
+            date: { $gte: new Date(startDate), $lte: new Date(endDate) }
+        }
+
+        const validRoles = ['student', 'teacher']
+        const roleFilter = validRoles.includes(role) ? role : null
+
+        if (req.user.role === 'student') {
+            query.user = req.user.id
+        } else {
+            let userIds = null
+
+            if (classId && roleFilter === 'student') {
+                const enrolledStudents = await UserClass.find({ class: classId, status: 'active' }).select('user')
+                userIds = enrolledStudents.map((entry) => entry.user)
+            } else if (classId && roleFilter === 'teacher') {
+                const selectedClass = await Class.findById(classId).select('teacher')
+                userIds = selectedClass?.teacher ? [selectedClass.teacher] : []
+            } else if (roleFilter) {
+                const users = await User.find({ role: roleFilter, isActive: true }).select('_id')
+                userIds = users.map((entry) => entry._id)
+            }
+
+            if (Array.isArray(userIds)) {
+                query.user = { $in: userIds }
+            }
+        }
+
+        const attendance = await Attendance.find(query)
+            .populate('user', 'name email role')
+            .sort({ date: -1, checkInTime: -1 })
 
         return success(reply, attendance, 'Login attendance fetched successfully', 200)
     } catch (err) {

@@ -6,7 +6,6 @@ import { useMutation } from "@tanstack/react-query";
 import api from "../../app/axios";
 import { useAuth } from "../../app/authContext";
 import { useNavigate } from "react-router-dom";
-import Spinner from "../../components/Spinner";
 import Button from "../../components/Button";
 import { FormField, PasswordField } from "../../components/FormField";
 import { toastApiError, toastSuccess } from "../../utils/toast";
@@ -145,17 +144,8 @@ export default function Login() {
               loading={mutation.isPending}
               className={`w-100 fw-semibold d-flex justify-content-center align-items-center ${styles.loginButton}`}
             >
-              {mutation.isPending ? (
-                <>
-                  <Spinner size="sm" variant="light" />
-                  <span className="ms-2">Signing in...</span>
-                </>
-              ) : (
-                <>
-                  <span>Sign In</span>
-                  <span className={styles.arrow}>→</span>
-                </>
-              )}
+              <span>Sign In</span>
+              <span className={styles.arrow}>→</span>
             </Button>
           </form>
 

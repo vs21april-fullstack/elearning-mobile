@@ -7,7 +7,7 @@ import EditIcon from "../../assets/svg/EditIcon";
 import DeleteIcon from "../../assets/svg/DeleteIcon";
 import styles from "../../styles/Columns.module.css";
 
-export const getTeacherColumns = (handleEdit, handleDelete) => [
+export const getTeacherColumns = (handleEdit, handleDelete, handleAssign) => [
   {
     header: "Teacher",
     accessor: "name",
@@ -28,21 +28,46 @@ export const getTeacherColumns = (handleEdit, handleDelete) => [
   {
     header: "Qualification",
     accessor: "qualification",
-    cell: (row) => row.teacherProfile?.qualification || "N/A",
+    cell: (row) => {
+      const qualifications = row.teacherProfile?.qualifications;
+      if (!qualifications || qualifications.length === 0) return "N/A";
+      const latest = qualifications[0];
+      return `${latest.degree} - ${latest.university}`;
+    },
   },
   {
     header: "Experience",
     accessor: "experience",
-    cell: (row) =>
-      row.teacherProfile?.experienceYears
-        ? `${row.teacherProfile.experienceYears} years`
-        : "N/A",
+    cell: (row) => {
+      const experiences = row.teacherProfile?.experiences;
+      if (!experiences || experiences.length === 0) return "N/A";
+
+      // Calculate total years of experience
+      const currentYear = new Date().getFullYear();
+      let totalYears = 0;
+
+      experiences.forEach((exp) => {
+        const endYear = exp.isCurrent
+          ? currentYear
+          : exp.endYear || currentYear;
+        const years = endYear - exp.startYear;
+        totalYears += years;
+      });
+
+      return totalYears > 0 ? `${totalYears} years` : "N/A";
+    },
   },
   {
     header: "Actions",
     accessor: "actions",
     cell: (row) => (
       <div className={styles.actionRow}>
+        <button
+          onClick={() => handleAssign(row)}
+          className={`${styles.actionButton} ${styles.buttonInfo}`}
+        >
+          📚 Assign
+        </button>
         <button
           onClick={() => handleEdit(row)}
           className={`${styles.actionButton} ${styles.buttonEdit}`}

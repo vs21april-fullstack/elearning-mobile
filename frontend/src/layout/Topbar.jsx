@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../app/authContext";
 import { fetchProfile } from "../modules/profile/profile.api";
-import Avatar from "../components/Avatar";
 import UserIcon from "../assets/svg/UserIcon";
 import LogoutIcon from "../assets/svg/LogoutIcon";
 import styles from "./Topbar.module.css";
@@ -27,7 +26,6 @@ export default function Topbar() {
         ? "Student"
         : "Admin";
   const userName = profile?.name || roleName;
-  const userImage = profile?.profileImage || null;
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -52,7 +50,6 @@ export default function Topbar() {
 
       <div ref={dropdownRef} className={styles.dropdownContainer}>
         <div onClick={() => setOpen(!open)} className={styles.trigger}>
-          <Avatar name={userName} image={userImage} size={40} />
           <span className={styles.userName}>{userName}</span>
           <span className={styles.chevron}>▼</span>
         </div>

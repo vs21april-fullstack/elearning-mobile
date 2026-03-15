@@ -1,5 +1,8 @@
 import bcrypt from 'bcrypt';
 import User from '../user/user.model.js';
+import Parents from '../parents/parents.model.js';
+import UserCourse from '../user/userCourse.model.js';
+import Course from '../course/course.model.js';
 import { success } from '../../utils/response.js';
 import { NotFoundError, AuthenticationError } from '../../utils/customErrors.js';
 import { BCRYPT_ROUNDS } from '../../utils/constants.js';
@@ -14,15 +17,36 @@ export const getProfile = async (req, reply) => {
 
         const user = await User.findById(userId)
             .select('-password')
-            .populate('parents', 'fatherName motherName');
+            .populate('parents');
 
         if (!user) {
             throw new NotFoundError('User not found');
         }
 
+        const data = user.toObject();
+
+        if (user.role === 'student') {
+            data.studentCourses = await UserCourse.find({
+                user: userId,
+                status: { $ne: 'dropped' }
+            })
+                .populate('course')
+                .sort('-enrolledAt');
+        }
+
+        if (user.role === 'teacher') {
+            data.teacherCourses = await Course.find({
+                $or: [
+                    { teacher: userId },
+                    { teachers: userId }
+                ],
+                isActive: true
+            }).sort('title');
+        }
+
         logger.info(`Profile retrieved for user: ${userId}`);
 
-        return success(reply, user, 'Profile retrieved successfully');
+        return success(reply, data, 'Profile retrieved successfully');
     } catch (err) {
         throw err;
     }
@@ -34,7 +58,7 @@ export const getProfile = async (req, reply) => {
 export const updateProfile = async (req, reply) => {
     try {
         const userId = req.user.id;
-        const { name, email, phone, profileImage } = req.body;
+        const { name, email, phone, parents, teacherProfile } = req.body;
 
         // Check if user exists
         const user = await User.findById(userId);
@@ -62,16 +86,60 @@ export const updateProfile = async (req, reply) => {
         if (name) user.name = name;
         if (email) user.email = email;
         if (phone) user.phone = phone;
-        if (profileImage !== undefined) user.profileImage = profileImage;
+
+        if (user.role === 'teacher' && teacherProfile !== undefined) {
+            user.teacherProfile = {
+                qualifications: teacherProfile?.qualifications || [],
+                experiences: teacherProfile?.experiences || []
+            };
+        }
+
+        if (user.role === 'student' && parents !== undefined) {
+            const existingParents = await Parents.findByStudent(userId);
+
+            if (existingParents) {
+                await Parents.findOneAndUpdate(
+                    { student: userId },
+                    parents,
+                    { new: true, runValidators: true }
+                );
+            } else {
+                const parentsDoc = await Parents.createForStudent(userId, parents);
+                user.parents = parentsDoc._id;
+            }
+        }
 
         await user.save();
 
         logger.info(`Profile updated for user: ${userId}`);
 
         // Return updated user without password
-        const updatedUser = await User.findById(userId).select('-password');
+        const updatedUser = await User.findById(userId)
+            .select('-password')
+            .populate('parents');
 
-        return success(reply, updatedUser, 'Profile updated successfully');
+        const responseData = updatedUser.toObject();
+
+        if (updatedUser.role === 'student') {
+            responseData.studentCourses = await UserCourse.find({
+                user: userId,
+                status: { $ne: 'dropped' }
+            })
+                .populate('course')
+                .sort('-enrolledAt');
+        }
+
+        if (updatedUser.role === 'teacher') {
+            responseData.teacherCourses = await Course.find({
+                $or: [
+                    { teacher: userId },
+                    { teachers: userId }
+                ],
+                isActive: true
+            }).sort('title');
+        }
+
+        return success(reply, responseData, 'Profile updated successfully');
     } catch (err) {
         throw err;
     }

@@ -1,84 +1,19 @@
 import { useState, useEffect } from "react";
 import { useForm, Controller, useFieldArray } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import Select from "react-select";
-import { createTeacherSchema } from "../teachers.validation";
+import { useMutation } from "@tanstack/react-query";
+import {
+  createTeacherSchema,
+  updateTeacherSchema,
+} from "../teachers.validation";
 import { addTeacher, updateTeacher } from "../teachers.api";
-import {
-  fetchClasses,
-  fetchClassesByTeacher,
-  assignTeacherToClasses,
-} from "../../classes/classes.api";
-import {
-  fetchCourses,
-  fetchCoursesByTeacher,
-  assignTeacherToCourses,
-} from "../../courses/courses.api";
 import toast from "react-hot-toast";
 import Button from "../../../components/Button";
-import {
-  FormField,
-  PasswordField,
-  SelectField,
-} from "../../../components/FormField";
+import { FormField, PasswordField } from "../../../components/FormField";
 import EyeOpen from "../../../assets/svg/EyeOpen";
 import EyeClosed from "../../../assets/svg/EyeClosed";
 import styles from "./AddUpdateTeacher.module.css";
 import modalStyles from "../../../components/Modal.module.css";
-
-// Custom styles for react-select
-const selectStyles = {
-  control: (base, state) => ({
-    ...base,
-    borderRadius: "12px",
-    border: state.isFocused
-      ? "2px solid #667eea"
-      : state.selectProps.error
-        ? "1px solid #dc3545"
-        : "1px solid #dee2e6",
-    boxShadow: state.isFocused ? "0 0 0 3px rgba(102, 126, 234, 0.1)" : "none",
-    padding: "6px 8px",
-    background: "white",
-    transition: "all 0.2s ease",
-    "&:hover": {
-      borderColor: "#667eea",
-    },
-  }),
-  option: (base, state) => ({
-    ...base,
-    backgroundColor: state.isSelected
-      ? "#667eea"
-      : state.isFocused
-        ? "#f0f2ff"
-        : "white",
-    color: state.isSelected ? "white" : "#333",
-    padding: "12px 16px",
-    cursor: "pointer",
-    "&:active": {
-      backgroundColor: "#667eea",
-    },
-  }),
-  menu: (base) => ({
-    ...base,
-    borderRadius: "12px",
-    boxShadow: "0 10px 40px rgba(0, 0, 0, 0.15)",
-    overflow: "hidden",
-    marginTop: "8px",
-  }),
-  menuList: (base) => ({
-    ...base,
-    padding: 0,
-  }),
-  placeholder: (base) => ({
-    ...base,
-    color: "#6c757d",
-  }),
-  singleValue: (base) => ({
-    ...base,
-    color: "#333",
-  }),
-};
 
 export default function AddUpdateTeacher({
   onClose,
@@ -86,33 +21,6 @@ export default function AddUpdateTeacher({
   teacher = null,
 }) {
   const [showPassword, setShowPassword] = useState(false);
-
-  // Fetch all classes and courses for selection
-  const { data: allClassesData } = useQuery({
-    queryKey: ["classes"],
-    queryFn: fetchClasses,
-  });
-
-  const { data: allCoursesData } = useQuery({
-    queryKey: ["courses"],
-    queryFn: fetchCourses,
-  });
-
-  const allClasses = allClassesData?.data || [];
-  const allCourses = allCoursesData?.data || [];
-
-  // Fetch teacher's current classes and courses when editing
-  const { data: teacherClasses = [] } = useQuery({
-    queryKey: ["teacherClasses", teacher?._id],
-    queryFn: () => fetchClassesByTeacher(teacher._id),
-    enabled: !!teacher?._id,
-  });
-
-  const { data: teacherCourses = [] } = useQuery({
-    queryKey: ["teacherCourses", teacher?._id],
-    queryFn: () => fetchCoursesByTeacher(teacher._id),
-    enabled: !!teacher?._id,
-  });
 
   // Set selected class and course when editing
   const {
@@ -122,18 +30,14 @@ export default function AddUpdateTeacher({
     reset,
     setValue,
   } = useForm({
-    resolver: yupResolver(createTeacherSchema),
+    resolver: yupResolver(teacher ? updateTeacherSchema : createTeacherSchema),
     defaultValues: teacher || {
       name: "",
       phone: "",
       email: "",
       password: "",
-      classId: "",
-      courseId: "",
       teacherProfile: {
-        qualifications: [
-          { degree: "", university: "", startYear: "", endYear: "" },
-        ],
+        qualifications: [{ degree: "", university: "" }],
         experiences: [
           {
             title: "",
@@ -190,20 +94,11 @@ export default function AddUpdateTeacher({
     }
   }, [teacher, setValue]);
 
-  useEffect(() => {
-    if (teacher && teacherClasses.length > 0) {
-      setValue("classId", teacherClasses[0]._id);
-    }
-  }, [teacher, teacherClasses, setValue]);
-
-  useEffect(() => {
-    if (teacher && teacherCourses.length > 0) {
-      setValue("courseId", teacherCourses[0]._id);
-    }
-  }, [teacher, teacherCourses, setValue]);
-
   const addMutation = useMutation({
     mutationFn: addTeacher,
+    onSuccess: () => {
+      toast.success("Teacher created successfully!");
+    },
     onError: (error) => {
       toast.error(error.response?.data?.message || "Failed to create teacher");
     },
@@ -221,33 +116,17 @@ export default function AddUpdateTeacher({
 
   const onSubmit = async (data) => {
     try {
-      let teacherId;
+      let payload = { ...data };
 
-      // Extract class and course IDs from form data
-      const { classId, courseId, ...teacherData } = data;
+      const { parents, ...teacherData } = payload;
 
       if (teacher) {
         await updateMutation.mutateAsync({
           id: teacher._id,
           teacherData,
         });
-        teacherId = teacher._id;
       } else {
-        const newTeacher = await addMutation.mutateAsync(teacherData);
-        teacherId = newTeacher._id;
-      }
-
-      // Assign class and course to the teacher (sent as arrays for future scalability)
-      const classIds = classId ? [classId] : [];
-      const courseIds = courseId ? [courseId] : [];
-
-      await Promise.all([
-        assignTeacherToClasses({ teacherId, classIds }),
-        assignTeacherToCourses({ teacherId, courseIds }),
-      ]);
-
-      if (!teacher) {
-        toast.success("Teacher created and assigned successfully!");
+        await addMutation.mutateAsync(teacherData);
       }
 
       onSuccess();
@@ -318,20 +197,22 @@ export default function AddUpdateTeacher({
                   />
                 </div>
 
-                {/* Password */}
-                <div className="col-md-6">
-                  <PasswordField
-                    label="Password"
-                    name="password"
-                    control={control}
-                    errors={errors}
-                    placeholder="Enter password"
-                    showPassword={showPassword}
-                    onTogglePassword={() => setShowPassword(!showPassword)}
-                    PasswordIcon={showPassword ? <EyeOpen /> : <EyeClosed />}
-                    required
-                  />
-                </div>
+                {/* Password (only for new teachers) */}
+                {!teacher && (
+                  <div className="col-md-6">
+                    <PasswordField
+                      label="Password"
+                      name="password"
+                      control={control}
+                      errors={errors}
+                      placeholder="Enter password"
+                      showPassword={showPassword}
+                      onTogglePassword={() => setShowPassword(!showPassword)}
+                      PasswordIcon={showPassword ? <EyeOpen /> : <EyeClosed />}
+                      required
+                    />
+                  </div>
+                )}
 
                 {/* Qualifications */}
                 <div className="col-12 mb-3">
@@ -361,31 +242,7 @@ export default function AddUpdateTeacher({
                             required
                           />
                         </div>
-                        <div className="col-md-5 mb-2">
-                          <FormField
-                            label="Start Year"
-                            name={`teacherProfile.qualifications.${index}.startYear`}
-                            control={control}
-                            errors={errors}
-                            type="number"
-                            placeholder="2020"
-                            min="1950"
-                            required
-                          />
-                        </div>
-                        <div className="col-md-5 mb-2">
-                          <FormField
-                            label="End Year"
-                            name={`teacherProfile.qualifications.${index}.endYear`}
-                            control={control}
-                            errors={errors}
-                            type="number"
-                            placeholder="2024"
-                            min="1950"
-                            required
-                          />
-                        </div>
-                        <div className="col-md-2 mb-2 d-flex align-items-end">
+                        <div className="col-md-12 mb-2 d-flex justify-content-end align-items-end">
                           {qualificationFields.length > 1 && (
                             <Button
                               type="button"
@@ -400,20 +257,18 @@ export default function AddUpdateTeacher({
                       </div>
                     </div>
                   ))}
-                  <button
+                  <Button
                     type="button"
-                    className={styles.addInlineButton}
+                    variant="primary"
                     onClick={() =>
                       appendQualification({
                         degree: "",
                         university: "",
-                        startYear: "",
-                        endYear: "",
                       })
                     }
                   >
                     + Add Qualification
-                  </button>
+                  </Button>
                   {errors.teacherProfile?.qualifications && (
                     <div className={styles.fieldError}>
                       {errors.teacherProfile.qualifications.message}
@@ -505,9 +360,9 @@ export default function AddUpdateTeacher({
                       </div>
                     </div>
                   ))}
-                  <button
+                  <Button
                     type="button"
-                    className={styles.addInlineButton}
+                    variant="primary"
                     onClick={() =>
                       appendExperience({
                         title: "",
@@ -519,96 +374,10 @@ export default function AddUpdateTeacher({
                     }
                   >
                     + Add Experience
-                  </button>
+                  </Button>
                   {errors.teacherProfile?.experiences && (
                     <div className={styles.fieldError}>
                       {errors.teacherProfile.experiences.message}
-                    </div>
-                  )}
-                </div>
-
-                {/* Assign Class */}
-                <div className="col-md-6 mb-3">
-                  <label className={styles.selectLabel}>
-                    Assign Class <span className="text-danger">*</span>
-                  </label>
-                  <Controller
-                    name="classId"
-                    control={control}
-                    render={({ field }) => (
-                      <Select
-                        {...field}
-                        options={allClasses.map((classItem) => ({
-                          value: classItem._id,
-                          label: classItem.title,
-                        }))}
-                        value={
-                          field.value
-                            ? {
-                                value: field.value,
-                                label:
-                                  allClasses.find((c) => c._id === field.value)
-                                    ?.title || "",
-                              }
-                            : null
-                        }
-                        onChange={(option) =>
-                          field.onChange(option?.value || "")
-                        }
-                        isClearable
-                        placeholder="Select a class"
-                        styles={selectStyles}
-                        error={!!errors.classId}
-                      />
-                    )}
-                  />
-                  {errors.classId && (
-                    <div className={styles.fieldError}>
-                      {errors.classId.message}
-                    </div>
-                  )}
-                </div>
-
-                {/* Assign Course */}
-                <div className="col-md-6 mb-3">
-                  <label className={styles.selectLabel}>
-                    Assign Course <span className="text-danger">*</span>
-                  </label>
-                  <Controller
-                    name="courseId"
-                    control={control}
-                    render={({ field }) => (
-                      <Select
-                        {...field}
-                        options={allCourses.map((course) => ({
-                          value: course._id,
-                          label: `${course.title} (${course.code || "No code"})`,
-                        }))}
-                        value={
-                          field.value
-                            ? {
-                                value: field.value,
-                                label: allCourses.find(
-                                  (c) => c._id === field.value,
-                                )
-                                  ? `${allCourses.find((c) => c._id === field.value).title} (${allCourses.find((c) => c._id === field.value).code || "No code"})`
-                                  : "",
-                              }
-                            : null
-                        }
-                        onChange={(option) =>
-                          field.onChange(option?.value || "")
-                        }
-                        isClearable
-                        placeholder="Select a course"
-                        styles={selectStyles}
-                        error={!!errors.courseId}
-                      />
-                    )}
-                  />
-                  {errors.courseId && (
-                    <div className={styles.fieldError}>
-                      {errors.courseId.message}
                     </div>
                   )}
                 </div>
@@ -623,21 +392,13 @@ export default function AddUpdateTeacher({
               >
                 Cancel
               </Button>
-              <Button variant="primary" type="submit" disabled={isLoading}>
-                {isLoading ? (
-                  <>
-                    <span
-                      className="spinner-border spinner-border-sm me-2"
-                      role="status"
-                      aria-hidden="true"
-                    ></span>
-                    {teacher ? "Updating..." : "Adding..."}
-                  </>
-                ) : teacher ? (
-                  "Update Teacher"
-                ) : (
-                  "Add Teacher"
-                )}
+              <Button
+                variant="primary"
+                type="submit"
+                disabled={isLoading}
+                loading={isLoading}
+              >
+                {teacher ? "Update Teacher" : "Add Teacher"}
               </Button>
             </div>
           </form>

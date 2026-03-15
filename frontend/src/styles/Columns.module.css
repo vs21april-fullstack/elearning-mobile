@@ -75,6 +75,14 @@
   background: #3b82f6;
 }
 
+.buttonSuccess {
+  background: #10b981;
+}
+
+.buttonSuccess:hover {
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
 .statusBadge {
   padding: 4px 12px;
   border-radius: 4px;
@@ -110,4 +118,42 @@
 .roleAdmin {
   background-color: #f0fdf4;
   color: #166534;
+}
+
+.statusScheduled {
+  background-color: #dbeafe;
+  color: #0c4a6e;
+}
+
+.statusOngoing {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.statusCompleted {
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
+.statusCancelled {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.statusActive {
+  background-color: #dcfce7;
+  color: #166534;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.statusInactive {
+  background-color: #f3f4f6;
+  color: #6b7280;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
 }

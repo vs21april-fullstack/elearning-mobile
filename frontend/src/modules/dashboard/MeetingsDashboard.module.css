@@ -55,6 +55,34 @@
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
 }
 
+.sectionHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.sectionHeadingGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.filtersRow {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 720px) {
+  .sectionHeader {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
 .sectionTitle {
   display: flex;
   align-items: center;
@@ -62,7 +90,7 @@
   font-size: 1.1rem;
   font-weight: 600;
   color: #1e293b;
-  margin: 0 0 20px;
+  margin: 0;
 }
 
 .badge {
@@ -72,6 +100,41 @@
   font-weight: 600;
   padding: 2px 10px;
   border-radius: 20px;
+}
+
+.tabRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.tabButton {
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  color: #475569;
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.tabButton:hover {
+  border-color: #818cf8;
+  color: #4338ca;
+  transform: translateY(-1px);
+}
+
+.tabButtonActive {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-color: transparent;
+  color: #fff;
 }
 
 .meetingsList {
@@ -106,6 +169,22 @@
   min-width: 0;
 }
 
+.courseLabel {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #4f46e5;
+}
+
+.timeLabel {
+  font-size: 0.82rem;
+  color: #64748b;
+}
+
+.todayLabel {
+  color: #0f766e;
+  font-weight: 600;
+}
+
 .meetingTitle {
   font-size: 1rem;
   font-weight: 600;
@@ -122,10 +201,102 @@
   color: #64748b;
 }
 
+.filterGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 200px;
+}
+
+.filterLabel {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.filterSelect {
+  height: 40px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 0 12px;
+  background: #fff;
+  color: #1e293b;
+  font-size: 0.9rem;
+  outline: none;
+}
+
+.filterInput {
+  height: 40px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 0 12px;
+  background: #fff;
+  color: #1e293b;
+  font-size: 0.9rem;
+  outline: none;
+}
+
+.filterSelect:focus {
+  border-color: #818cf8;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+.filterInput:focus {
+  border-color: #818cf8;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+.dateFilterRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.clearFilterButton {
+  height: 40px;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  color: #475569;
+  border-radius: 10px;
+  padding: 0 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.clearFilterButton:hover {
+  border-color: #818cf8;
+  color: #4338ca;
+}
+
 .joinBtn {
   flex-shrink: 0;
   min-width: 130px;
   font-size: 0.88rem;
+}
+
+.paginationWrapper {
+  margin-top: 10px;
+}
+
+@media (max-width: 720px) {
+  .filtersRow {
+    width: 100%;
+  }
+
+  .meetingCard {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .joinBtn {
+    width: 100%;
+  }
+
+  .dateFilterRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
 }
 
 .emptyState {
@@ -201,7 +372,12 @@
 
 .calDay {
   font-size: 0.85rem;
-  padding: 8px 0;
+  width: 34px;
+  height: 34px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 8px;
   color: #334155;
   cursor: default;

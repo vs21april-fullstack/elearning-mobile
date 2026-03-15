@@ -64,7 +64,7 @@ export default async function (app) {
 
   // Teacher routes
   app.post(
-    "/teacher",
+    "/teachers",
     {
       preHandler: [roleGuard(["admin"]), validate(createTeacherSchema)],
     },

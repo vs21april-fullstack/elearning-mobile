@@ -51,12 +51,37 @@ schema.index({ user: 1, class: 1 }, { unique: true })
 schema.statics.enrollStudent = async function (userId, classId) {
     const existing = await this.findOne({ user: userId, class: classId })
     if (existing) {
-        const err = new Error('Student already enrolled in this class')
-        err.statusCode = 409
-        throw err
+        // If already enrolled and status is active, return existing enrollment
+        if (existing.status === 'active') {
+            return existing
+        }
+        // If previously dropped, reactivate the enrollment
+        existing.status = 'active'
+        await existing.save()
+
+        // Re-enroll student in all courses of this class
+        const UserCourse = mongoose.model('UserCourse')
+        try {
+            await UserCourse.enrollStudentInClassCourses(userId, classId)
+        } catch (err) {
+            console.error('Error auto-enrolling in class courses:', err)
+        }
+
+        return existing
     }
 
-    return this.create({ user: userId, class: classId })
+    const enrollment = await this.create({ user: userId, class: classId })
+
+    // Auto-enroll student in all courses of this class
+    const UserCourse = mongoose.model('UserCourse')
+    try {
+        await UserCourse.enrollStudentInClassCourses(userId, classId)
+    } catch (err) {
+        // Log error but don't fail the class enrollment
+        console.error('Error auto-enrolling in class courses:', err)
+    }
+
+    return enrollment
 }
 
 schema.statics.getStudentClasses = function (userId) {

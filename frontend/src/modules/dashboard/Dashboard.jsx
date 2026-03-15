@@ -5,7 +5,6 @@ import ChartSection from "./components/ChartSection";
 import StudentIcon from "../../assets/svg/StudentIcon";
 import TeacherIcon from "../../assets/svg/TeacherIcon";
 import SchoolBuildingIcon from "../../assets/svg/SchoolBuildingIcon";
-import MoneyIcon from "../../assets/svg/MoneyIcon";
 import { useQuery } from "@tanstack/react-query";
 import { fetchDashboardStats } from "./dashboard.api";
 import Spinner from "../../components/Spinner";
@@ -19,8 +18,8 @@ export default function Dashboard() {
 
   const students = useMemo(() => stats?.students || 0, [stats?.students]);
   const teachers = useMemo(() => stats?.teachers || 0, [stats?.teachers]);
-  const classes = useMemo(() => stats?.classes || 0, [stats?.classes]);
-  const revenue = useMemo(() => stats?.revenue || 0, [stats?.revenue]);
+  const courses = useMemo(() => stats?.courses || 0, [stats?.courses]);
+  // const revenue = useMemo(() => stats?.revenue || 0, [stats?.revenue]);
 
   const chartData = useMemo(
     () => [
@@ -56,17 +55,17 @@ export default function Dashboard() {
           color="#764ba2"
         />
         <KpiCard
-          title="Active Classes"
-          value={classes}
+          title="Active Courses"
+          value={courses}
           icon={<SchoolBuildingIcon size={28} color="white" />}
           color="#f093fb"
         />
-        <KpiCard
+        {/* <KpiCard
           title="Revenue"
           value={`₹${revenue.toLocaleString()}`}
           icon={<MoneyIcon size={28} color="white" />}
           color="#4facfe"
-        />
+        /> */}
       </div>
 
       <ChartSection data={chartData} />

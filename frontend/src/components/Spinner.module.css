@@ -1,0 +1,110 @@
+/* Base Spinner Styles */
+.spinner {
+  display: inline-block;
+  border-radius: 50%;
+  border-style: solid;
+  animation: spin 0.6s linear infinite;
+}
+
+/* Size Variants */
+.spinnerXs {
+  width: 12px;
+  height: 12px;
+  border-width: 2px;
+}
+
+.spinnerSm {
+  width: 16px;
+  height: 16px;
+  border-width: 2px;
+}
+
+.spinnerMd {
+  width: 24px;
+  height: 24px;
+  border-width: 3px;
+}
+
+.spinnerLg {
+  width: 40px;
+  height: 40px;
+  border-width: 4px;
+}
+
+/* Color Variants */
+.spinnerPrimary {
+  border-color: rgba(102, 126, 234, 0.25);
+  border-top-color: #667eea;
+}
+
+.spinnerLight {
+  border-color: rgba(255, 255, 255, 0.25);
+  border-top-color: #ffffff;
+}
+
+.spinnerDark {
+  border-color: rgba(0, 0, 0, 0.15);
+  border-top-color: #333333;
+}
+
+.spinnerWhite {
+  border-color: rgba(255, 255, 255, 0.3);
+  border-top-color: #ffffff;
+}
+
+/* Animation */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Accessibility */
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Inline Wrapper (for buttons) */
+.inlineWrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.spinnerText {
+  display: inline-block;
+}
+
+/* Full Page Overlay */
+.fullPageOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 255, 255, 0.95);
+  z-index: 9999;
+}
+
+.fullPageContent {
+  text-align: center;
+  padding: 2rem;
+}
+
+.fullPageText {
+  margin-top: 1rem;
+  font-size: 1rem;
+  color: #666;
+  font-weight: 500;
+}

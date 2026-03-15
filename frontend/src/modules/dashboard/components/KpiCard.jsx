@@ -11,7 +11,7 @@ export default function KpiCard({ title, value, icon, color }) {
   const colorClass = colorClassByHex[color] || styles.colorIndigo;
 
   return (
-    <div className="col-md-3">
+    <div className="col-md-4">
       <div
         className={`glass-card animate-slide-in ${styles.kpiCard} ${colorClass}`}
       >
