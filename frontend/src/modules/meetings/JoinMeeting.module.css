@@ -168,12 +168,17 @@
   position: absolute;
   top: 0;
   left: 0;
-  width: 230px;
+  width: 120px;
   height: 90px;
-  background: #000;
+  background: transparent;
   border-radius: 0 0 12px 0;
   z-index: 200;
   pointer-events: none;
+  backdrop-filter: blur(10px);
+}
+
+a.watermark.leftwatermark {
+  display: none !important;
 }
 
 .jitsiWatermarkMaskBottom {
