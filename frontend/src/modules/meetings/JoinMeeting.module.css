@@ -231,6 +231,12 @@
   transition: all 0.2s;
 }
 
+.controlButton:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
+
 .controlButton:hover {
   background: #286c4b;
   transform: scale(1.1);
@@ -260,7 +266,6 @@
   background: #ff4757;
   width: 56px;
   height: 56px;
-  font-size: 24px;
 }
 
 .controlButton.hangup:hover {
@@ -290,6 +295,11 @@
   background: rgba(30, 144, 255, 0.85);
   padding: 8px 12px;
   border-radius: 20px;
+}
+
+.controlIcon {
+  width: 22px;
+  height: 22px;
 }
 
 /* Mobile responsive */

@@ -20,6 +20,162 @@ const FALLBACK_JITSI_DOMAIN = (
 
 const PARTICIPANT_TOAST_COOLDOWN_MS = 5000;
 
+function MicIcon({ muted = false }) {
+  return (
+    <svg viewBox="0 0 24 24" className={styles.controlIcon} aria-hidden="true">
+      <path
+        d="M12 15a3 3 0 0 0 3-3V6a3 3 0 1 0-6 0v6a3 3 0 0 0 3 3Z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M19 12a7 7 0 0 1-14 0"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M12 19v3"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+      <path
+        d="M8 22h8"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+      {muted && (
+        <path
+          d="M4 4l16 16"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
+      )}
+    </svg>
+  );
+}
+
+function CameraIcon({ muted = false }) {
+  return (
+    <svg viewBox="0 0 24 24" className={styles.controlIcon} aria-hidden="true">
+      <path
+        d="M15 10l5-3v10l-5-3"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <rect
+        x="3"
+        y="6"
+        width="12"
+        height="12"
+        rx="2"
+        ry="2"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
+      {muted && (
+        <path
+          d="M4 4l16 16"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
+      )}
+    </svg>
+  );
+}
+
+function ScreenShareIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className={styles.controlIcon} aria-hidden="true">
+      <rect
+        x="3"
+        y="4"
+        width="18"
+        height="12"
+        rx="2"
+        ry="2"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
+      <path
+        d="M8 20h8"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+      <path
+        d="M12 16v4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+      <path
+        d="M10 10l2-2 2 2"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M12 8v6"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function HangupIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className={styles.controlIcon} aria-hidden="true">
+      <path
+        d="M3 14.5c2.8-2 5.8-3 9-3s6.2 1 9 3"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+      <path
+        d="M6 16v3a1 1 0 0 0 1 1h2.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+      <path
+        d="M18 16v3a1 1 0 0 1-1 1h-2.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 export default function JoinMeeting() {
   const { meetingId } = useParams();
   const navigate = useNavigate();
@@ -42,6 +198,8 @@ export default function JoinMeeting() {
   const [isMicMuted, setIsMicMuted] = useState(false);
   const [isCameraMuted, setIsCameraMuted] = useState(false);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
+  const [isTogglingMic, setIsTogglingMic] = useState(false);
+  const [isTogglingCamera, setIsTogglingCamera] = useState(false);
   const [participantCount, setParticipantCount] = useState(1);
 
   const { data: meeting, isLoading } = useQuery({
@@ -91,6 +249,8 @@ export default function JoinMeeting() {
       setMeetingConfig(null);
       setParticipantCount(1);
       setIsScreenSharing(false);
+      setIsTogglingMic(false);
+      setIsTogglingCamera(false);
       participantNamesRef.current.clear();
       participantToastTimestampsRef.current.clear();
 
@@ -159,6 +319,9 @@ export default function JoinMeeting() {
             startWithVideoMuted: isCameraMuted,
             enableWelcomePage: false,
             prejoinPageEnabled: false,
+            prejoinConfig: {
+              enabled: false,
+            },
             disableSimulcast: false,
             fileRecordingsEnabled: false,
           },
@@ -183,6 +346,26 @@ export default function JoinMeeting() {
           const count = api.getNumberOfParticipants();
           if (typeof count === "number" && count > 0) {
             setParticipantCount(count);
+          }
+        };
+
+        const syncLocalMediaState = async () => {
+          try {
+            if (api?.isAudioMuted) {
+              const audioMuted = await api.isAudioMuted();
+              if (typeof audioMuted === "boolean") {
+                setIsMicMuted(audioMuted);
+              }
+            }
+
+            if (api?.isVideoMuted) {
+              const videoMuted = await api.isVideoMuted();
+              if (typeof videoMuted === "boolean") {
+                setIsCameraMuted(videoMuted);
+              }
+            }
+          } catch (error) {
+            console.error("Failed to sync media state:", error);
           }
         };
 
@@ -243,6 +426,7 @@ export default function JoinMeeting() {
           setIsJoined(true);
           setIsJoining(false);
           updateParticipantCount();
+          syncLocalMediaState();
 
           if (!presenceStateRef.current.hasJoined) {
             presenceStateRef.current.hasJoined = true;
@@ -315,6 +499,8 @@ export default function JoinMeeting() {
         api.addEventListener("videoConferenceLeft", () => {
           setIsJoined(false);
           setIsScreenSharing(false);
+          setIsTogglingMic(false);
+          setIsTogglingCamera(false);
 
           if (
             presenceStateRef.current.hasJoined &&
@@ -399,15 +585,45 @@ export default function JoinMeeting() {
   ]);
 
   const toggleMicrophone = () => {
-    if (jitsiApiRef.current) {
-      jitsiApiRef.current.executeCommand("toggleAudio");
-    }
+    const api = jitsiApiRef.current;
+    if (!api || isTogglingMic) return;
+
+    setIsTogglingMic(true);
+    api.executeCommand("toggleAudio");
+
+    setTimeout(async () => {
+      try {
+        if (api?.isAudioMuted) {
+          const muted = await api.isAudioMuted();
+          if (typeof muted === "boolean") {
+            setIsMicMuted(muted);
+          }
+        }
+      } finally {
+        setIsTogglingMic(false);
+      }
+    }, 180);
   };
 
   const toggleCamera = () => {
-    if (jitsiApiRef.current) {
-      jitsiApiRef.current.executeCommand("toggleVideo");
-    }
+    const api = jitsiApiRef.current;
+    if (!api || isTogglingCamera) return;
+
+    setIsTogglingCamera(true);
+    api.executeCommand("toggleVideo");
+
+    setTimeout(async () => {
+      try {
+        if (api?.isVideoMuted) {
+          const muted = await api.isVideoMuted();
+          if (typeof muted === "boolean") {
+            setIsCameraMuted(muted);
+          }
+        }
+      } finally {
+        setIsTogglingCamera(false);
+      }
+    }, 180);
   };
 
   const toggleScreenShare = () => {
@@ -531,8 +747,12 @@ export default function JoinMeeting() {
                 }`}
                 onClick={toggleMicrophone}
                 title="Toggle Microphone"
+                aria-label={
+                  isMicMuted ? "Unmute microphone" : "Mute microphone"
+                }
+                disabled={isTogglingMic}
               >
-                🎤
+                <MicIcon muted={isMicMuted} />
               </button>
               <button
                 className={`${styles.controlButton} ${
@@ -540,8 +760,12 @@ export default function JoinMeeting() {
                 }`}
                 onClick={toggleCamera}
                 title="Toggle Camera"
+                aria-label={
+                  isCameraMuted ? "Turn camera on" : "Turn camera off"
+                }
+                disabled={isTogglingCamera}
               >
-                📹
+                <CameraIcon muted={isCameraMuted} />
               </button>
               <button
                 className={`${styles.controlButton} ${
@@ -549,15 +773,21 @@ export default function JoinMeeting() {
                 }`}
                 onClick={toggleScreenShare}
                 title="Share Screen"
+                aria-label={
+                  isScreenSharing
+                    ? "Stop screen sharing"
+                    : "Start screen sharing"
+                }
               >
-                🖥️
+                <ScreenShareIcon />
               </button>
               <button
                 className={`${styles.controlButton} ${styles.hangup}`}
                 onClick={() => handleLeave(true)}
                 title="Leave Meeting"
+                aria-label="Leave meeting"
               >
-                📞
+                <HangupIcon />
               </button>
             </div>
 
