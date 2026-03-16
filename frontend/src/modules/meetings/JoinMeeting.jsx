@@ -18,6 +18,8 @@ const FALLBACK_JITSI_DOMAIN = (
   .replace(/^https?:\/\//, "")
   .replace(/\/+$/, "");
 
+const PARTICIPANT_TOAST_COOLDOWN_MS = 5000;
+
 export default function JoinMeeting() {
   const { meetingId } = useParams();
   const navigate = useNavigate();
@@ -27,6 +29,8 @@ export default function JoinMeeting() {
   const jitsiApiRef = useRef(null);
   const autoJoinAttemptedRef = useRef(false);
   const presenceStateRef = useRef({ hasJoined: false, hasLeft: false });
+  const participantNamesRef = useRef(new Map());
+  const participantToastTimestampsRef = useRef(new Map());
   const isTeacher = user?.role === "teacher";
   const shouldAutoJoin = isTeacher || location.state?.autoJoin === true;
 
@@ -37,6 +41,7 @@ export default function JoinMeeting() {
   const [isJoined, setIsJoined] = useState(false);
   const [isMicMuted, setIsMicMuted] = useState(false);
   const [isCameraMuted, setIsCameraMuted] = useState(false);
+  const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [participantCount, setParticipantCount] = useState(1);
 
   const { data: meeting, isLoading } = useQuery({
@@ -54,6 +59,8 @@ export default function JoinMeeting() {
   useEffect(() => {
     autoJoinAttemptedRef.current = false;
     presenceStateRef.current = { hasJoined: false, hasLeft: false };
+    participantNamesRef.current.clear();
+    participantToastTimestampsRef.current.clear();
   }, [meetingId]);
 
   const sendPresenceEvent = useCallback(
@@ -83,6 +90,9 @@ export default function JoinMeeting() {
       setHasStartedJoin(false);
       setMeetingConfig(null);
       setParticipantCount(1);
+      setIsScreenSharing(false);
+      participantNamesRef.current.clear();
+      participantToastTimestampsRef.current.clear();
 
       if (shouldNavigate) {
         navigate(-1);
@@ -158,33 +168,7 @@ export default function JoinMeeting() {
             DEFAULT_WELCOME_PAGE_LOGO_URL: "",
             SHOW_CHROME_EXTENSION_BANNER: false,
             MOBILE_APP_PROMO: false,
-            TOOLBAR_BUTTONS: [
-              "microphone",
-              "camera",
-              "closedcaptions",
-              "desktop",
-              "fullscreen",
-              "fodeviceselection",
-              "hangup",
-              "profile",
-              "chat",
-              "recording",
-              "livestreaming",
-              "etherpad",
-              "sharedvideo",
-              "settings",
-              "raisehand",
-              "videoquality",
-              "filmstrip",
-              "invite",
-              "feedback",
-              "stats",
-              "shortcuts",
-              "tileview",
-              "download",
-              "help",
-              "mute-everyone",
-            ],
+            TOOLBAR_BUTTONS: [],
           },
         };
 
@@ -194,9 +178,71 @@ export default function JoinMeeting() {
 
         const api = new window.JitsiMeetExternalAPI(domain, options);
 
+        const updateParticipantCount = () => {
+          if (!api?.getNumberOfParticipants) return;
+          const count = api.getNumberOfParticipants();
+          if (typeof count === "number" && count > 0) {
+            setParticipantCount(count);
+          }
+        };
+
+        const resolveParticipantName = (
+          participantId,
+          fallback = "A participant",
+        ) => {
+          if (!participantId) return fallback;
+
+          const cachedName = participantNamesRef.current.get(participantId);
+          if (cachedName) return cachedName;
+
+          if (api?.getParticipantsInfo) {
+            const participantInfo = api
+              .getParticipantsInfo()
+              .find(
+                (participant) =>
+                  participant.participantId === participantId ||
+                  participant.id === participantId,
+              );
+
+            const participantName =
+              participantInfo?.formattedDisplayName ||
+              participantInfo?.displayName ||
+              participantInfo?.name;
+
+            if (participantName) {
+              participantNamesRef.current.set(participantId, participantName);
+              return participantName;
+            }
+          }
+
+          return fallback;
+        };
+
+        const shouldShowParticipantToast = (
+          eventType,
+          participantId,
+          participantName,
+        ) => {
+          const identity = participantId || participantName;
+          if (!identity) return false;
+
+          const now = Date.now();
+          const key = `${eventType}:${identity}`;
+          const lastShownAt =
+            participantToastTimestampsRef.current.get(key) || 0;
+
+          if (now - lastShownAt < PARTICIPANT_TOAST_COOLDOWN_MS) {
+            return false;
+          }
+
+          participantToastTimestampsRef.current.set(key, now);
+          return true;
+        };
+
         api.addEventListener("videoConferenceJoined", () => {
           setIsJoined(true);
           setIsJoining(false);
+          updateParticipantCount();
 
           if (!presenceStateRef.current.hasJoined) {
             presenceStateRef.current.hasJoined = true;
@@ -207,12 +253,39 @@ export default function JoinMeeting() {
           toast.success("Successfully joined the meeting!");
         });
 
-        api.addEventListener("participantJoined", () => {
-          setParticipantCount((prev) => prev + 1);
+        api.addEventListener("participantJoined", (data) => {
+          updateParticipantCount();
+
+          const participantId = data?.id || data?.participantId;
+          const participantName =
+            data?.displayName || resolveParticipantName(participantId);
+
+          if (participantId && participantName) {
+            participantNamesRef.current.set(participantId, participantName);
+          }
+
+          if (
+            shouldShowParticipantToast("join", participantId, participantName)
+          ) {
+            toast.success(`${participantName} joined`);
+          }
         });
 
-        api.addEventListener("participantLeft", () => {
-          setParticipantCount((prev) => Math.max(1, prev - 1));
+        api.addEventListener("participantLeft", (data) => {
+          updateParticipantCount();
+
+          const participantId = data?.id || data?.participantId;
+          const participantName = resolveParticipantName(participantId);
+
+          if (participantId) {
+            participantNamesRef.current.delete(participantId);
+          }
+
+          if (
+            shouldShowParticipantToast("left", participantId, participantName)
+          ) {
+            toast(`${participantName} left`);
+          }
         });
 
         api.addEventListener("audioMuteStatusChanged", (data) => {
@@ -221,6 +294,10 @@ export default function JoinMeeting() {
 
         api.addEventListener("videoMuteStatusChanged", (data) => {
           setIsCameraMuted(data.muted);
+        });
+
+        api.addEventListener("screenSharingStatusChanged", (data) => {
+          setIsScreenSharing(Boolean(data?.on));
         });
 
         api.addEventListener("readyToClose", () => {
@@ -237,6 +314,7 @@ export default function JoinMeeting() {
 
         api.addEventListener("videoConferenceLeft", () => {
           setIsJoined(false);
+          setIsScreenSharing(false);
 
           if (
             presenceStateRef.current.hasJoined &&
@@ -334,7 +412,7 @@ export default function JoinMeeting() {
 
   const toggleScreenShare = () => {
     if (jitsiApiRef.current) {
-      jitsiApiRef.current.executeCommand("toggleScreenShare");
+      jitsiApiRef.current.executeCommand("toggleShareScreen");
     }
   };
 
@@ -441,6 +519,9 @@ export default function JoinMeeting() {
                 👥 {participantCount} participant
                 {participantCount !== 1 ? "s" : ""}
               </span>
+              {isScreenSharing && (
+                <span className={styles.statusBadge}>Screen sharing on</span>
+              )}
             </div>
 
             <div className={styles.controlsCenter}>
@@ -463,7 +544,9 @@ export default function JoinMeeting() {
                 📹
               </button>
               <button
-                className={styles.controlButton}
+                className={`${styles.controlButton} ${
+                  isScreenSharing ? styles.active : ""
+                }`}
                 onClick={toggleScreenShare}
                 title="Share Screen"
               >

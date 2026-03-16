@@ -192,6 +192,7 @@
 
 .controlsLeft {
   justify-content: flex-start;
+  gap: 8px;
 }
 
 .controlsRight {
@@ -247,6 +248,14 @@
   background: #ff3838;
 }
 
+.controlButton.active {
+  background: #1e90ff;
+}
+
+.controlButton.active:hover {
+  background: #1c7ed6;
+}
+
 .controlButton.hangup {
   background: #ff4757;
   width: 56px;
@@ -272,6 +281,15 @@
 
 .leaveButton:hover {
   background: #ff3838 !important;
+}
+
+.statusBadge {
+  color: white;
+  font-size: 13px;
+  font-weight: 500;
+  background: rgba(30, 144, 255, 0.85);
+  padding: 8px 12px;
+  border-radius: 20px;
 }
 
 /* Mobile responsive */
