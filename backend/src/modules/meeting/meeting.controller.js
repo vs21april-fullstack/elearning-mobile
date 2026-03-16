@@ -22,6 +22,13 @@ const isJitsiAuthEnabled = () => {
     return value === 'true' || value === '1' || value === 'yes'
 }
 
+const isPublicJitsiDomain = () => {
+    const domain = getJitsiDomain().toLowerCase()
+    return domain === 'meet.jit.si' || domain === 'www.meet.jit.si'
+}
+
+const canUseJitsiJwt = () => isJitsiAuthEnabled() && !isPublicJitsiDomain()
+
 const canTeacherJoinMeeting = (meeting, userId) => {
     if (!meeting?.teacher) return false
     return String(meeting.teacher) === String(userId)
@@ -238,7 +245,7 @@ export const getMeetingJoinConfig = async (req, reply) => {
 
     const isModerator = userRole === 'teacher' || userRole === 'admin'
 
-    const shouldUseJitsiJwt = isJitsiAuthEnabled()
+    const shouldUseJitsiJwt = canUseJitsiJwt()
 
     const joinToken = shouldUseJitsiJwt
         ? req.server.jwt.sign(
@@ -251,6 +258,7 @@ export const getMeetingJoinConfig = async (req, reply) => {
                 meetingId: String(meeting._id),
                 userId: String(userId),
                 role: userRole,
+                moderator: isModerator,
                 meetingRole: isModerator ? 'moderator' : 'participant',
                 context: {
                     user: {
