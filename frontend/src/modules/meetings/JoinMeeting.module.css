@@ -164,6 +164,30 @@
   flex: 1;
 }
 
+.jitsiWatermarkMaskTop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 230px;
+  height: 90px;
+  background: #000;
+  border-radius: 0 0 12px 0;
+  z-index: 200;
+  pointer-events: none;
+}
+
+.jitsiWatermarkMaskBottom {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 220px;
+  height: 74px;
+  background: #000;
+  border-radius: 0 12px 0 0;
+  z-index: 200;
+  pointer-events: none;
+}
+
 .controlsOverlay {
   position: fixed;
   bottom: 0;

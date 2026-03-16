@@ -936,6 +936,12 @@ export default function JoinMeeting() {
       )}
 
       <div className={styles.jitsiContainer} ref={containerRef} />
+      {hasStartedJoin && (
+        <>
+          <div className={styles.jitsiWatermarkMaskTop} />
+          <div className={styles.jitsiWatermarkMaskBottom} />
+        </>
+      )}
 
       {isJoined && (
         <div className={styles.controlsOverlay}>
