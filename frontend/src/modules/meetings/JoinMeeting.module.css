@@ -297,6 +297,130 @@
   border-radius: 20px;
 }
 
+.raiseBadge {
+  color: #1b1b1b;
+  font-size: 13px;
+  font-weight: 600;
+  background: #ffd166;
+  padding: 8px 12px;
+  border-radius: 20px;
+}
+
+.moderatorPanel {
+  width: 260px;
+  max-height: 160px;
+  overflow: hidden;
+  border-radius: 12px;
+  background: rgba(15, 15, 15, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  margin-right: 12px;
+}
+
+.moderatorTitle {
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.moderatorHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-right: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.moderatorHeader .moderatorTitle {
+  border-bottom: none;
+}
+
+.lowerAllHandsButton {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.lowerAllHandsButton:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.lowerAllHandsButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.moderatorList {
+  max-height: 118px;
+  overflow-y: auto;
+}
+
+.moderatorRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+}
+
+.participantName {
+  color: #fff;
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.handTag {
+  color: #ffd166;
+  font-weight: 700;
+}
+
+.muteParticipantButton {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ff5f5f;
+  color: #fff;
+  cursor: pointer;
+  flex: 0 0 auto;
+}
+
+.muteParticipantButton .controlIcon {
+  width: 14px;
+  height: 14px;
+}
+
+.muteParticipantButton:hover {
+  background: #f03d3d;
+}
+
+.lowerHandButton {
+  border: none;
+  background: #ffd166;
+  color: #1b1b1b;
+  border-radius: 999px;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.lowerHandButton:hover {
+  background: #ffc247;
+}
+
 .controlIcon {
   width: 22px;
   height: 22px;
@@ -314,6 +438,17 @@
   .controlsRight {
     width: 100%;
     justify-content: center;
+  }
+
+  .controlsRight {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .moderatorPanel {
+    width: 100%;
+    margin-right: 0;
+    max-height: 140px;
   }
 
   .preJoinCard {
