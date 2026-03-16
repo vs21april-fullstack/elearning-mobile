@@ -23,7 +23,7 @@ import { roleGuard } from "../../plugins/roleGuard.js";
 export default async function (app) {
   // Student routes
   app.post(
-    "/student",
+    "/students",
     {
       preHandler: [roleGuard(["admin"]), validate(createStudentSchema)],
     },
