@@ -176,6 +176,45 @@ function HangupIcon() {
   );
 }
 
+function HandRaiseIcon({ active = false }) {
+  return (
+    <svg viewBox="0 0 24 24" className={styles.controlIcon} aria-hidden="true">
+      <path
+        d="M7.5 11V5.75a1.25 1.25 0 1 1 2.5 0V11"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+      <path
+        d="M10 11V4.75a1.25 1.25 0 1 1 2.5 0V11"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+      <path
+        d="M12.5 11V6a1.25 1.25 0 1 1 2.5 0v7.25"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+      <path
+        d="M7.5 11c-1.7 0-2.5 1.9-1.3 3l3.4 3.3a4 4 0 0 0 2.8 1.2h1.9a4 4 0 0 0 4-4V10.5a1.25 1.25 0 1 0-2.5 0"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {active && (
+        <circle cx="19" cy="5" r="2.2" fill="currentColor" opacity="0.95" />
+      )}
+    </svg>
+  );
+}
+
 export default function JoinMeeting() {
   const { meetingId } = useParams();
   const navigate = useNavigate();
@@ -185,8 +224,10 @@ export default function JoinMeeting() {
   const jitsiApiRef = useRef(null);
   const autoJoinAttemptedRef = useRef(false);
   const presenceStateRef = useRef({ hasJoined: false, hasLeft: false });
+  const localParticipantIdRef = useRef(null);
   const participantNamesRef = useRef(new Map());
   const participantToastTimestampsRef = useRef(new Map());
+  const isModerator = user?.role === "teacher" || user?.role === "admin";
   const isTeacher = user?.role === "teacher";
   const shouldAutoJoin = isTeacher || location.state?.autoJoin === true;
 
@@ -200,6 +241,9 @@ export default function JoinMeeting() {
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [isTogglingMic, setIsTogglingMic] = useState(false);
   const [isTogglingCamera, setIsTogglingCamera] = useState(false);
+  const [isHandRaised, setIsHandRaised] = useState(false);
+  const [participants, setParticipants] = useState([]);
+  const [raisedHands, setRaisedHands] = useState({});
   const [participantCount, setParticipantCount] = useState(1);
 
   const { data: meeting, isLoading } = useQuery({
@@ -217,8 +261,12 @@ export default function JoinMeeting() {
   useEffect(() => {
     autoJoinAttemptedRef.current = false;
     presenceStateRef.current = { hasJoined: false, hasLeft: false };
+    localParticipantIdRef.current = null;
     participantNamesRef.current.clear();
     participantToastTimestampsRef.current.clear();
+    setIsHandRaised(false);
+    setParticipants([]);
+    setRaisedHands({});
   }, [meetingId]);
 
   const sendPresenceEvent = useCallback(
@@ -251,6 +299,9 @@ export default function JoinMeeting() {
       setIsScreenSharing(false);
       setIsTogglingMic(false);
       setIsTogglingCamera(false);
+      setIsHandRaised(false);
+      setParticipants([]);
+      setRaisedHands({});
       participantNamesRef.current.clear();
       participantToastTimestampsRef.current.clear();
 
@@ -328,7 +379,14 @@ export default function JoinMeeting() {
           interfaceConfigOverwrite: {
             SHOW_JITSI_WATERMARK: false,
             SHOW_BRAND_WATERMARK: false,
+            SHOW_WATERMARK_FOR_GUESTS: false,
+            JITSI_WATERMARK_LINK: "",
+            BRAND_WATERMARK_LINK: "",
+            DEFAULT_LOGO_URL: "",
             DEFAULT_WELCOME_PAGE_LOGO_URL: "",
+            APP_NAME: "",
+            NATIVE_APP_NAME: "",
+            PROVIDER_NAME: "",
             SHOW_CHROME_EXTENSION_BANNER: false,
             MOBILE_APP_PROMO: false,
             TOOLBAR_BUTTONS: [],
@@ -347,6 +405,28 @@ export default function JoinMeeting() {
           if (typeof count === "number" && count > 0) {
             setParticipantCount(count);
           }
+        };
+
+        const refreshParticipants = () => {
+          if (!api?.getParticipantsInfo) return;
+
+          const participantInfo = api.getParticipantsInfo() || [];
+          const normalizedParticipants = participantInfo
+            .map((participant) => ({
+              id: participant.participantId || participant.id,
+              name:
+                participant.formattedDisplayName ||
+                participant.displayName ||
+                participant.name ||
+                "Participant",
+            }))
+            .filter((participant) => Boolean(participant.id));
+
+          normalizedParticipants.forEach((participant) => {
+            participantNamesRef.current.set(participant.id, participant.name);
+          });
+
+          setParticipants(normalizedParticipants);
         };
 
         const syncLocalMediaState = async () => {
@@ -422,11 +502,17 @@ export default function JoinMeeting() {
           return true;
         };
 
-        api.addEventListener("videoConferenceJoined", () => {
+        api.addEventListener("videoConferenceJoined", (data) => {
+          const localParticipantId = data?.id || data?.participantId;
+          if (localParticipantId) {
+            localParticipantIdRef.current = localParticipantId;
+          }
+
           setIsJoined(true);
           setIsJoining(false);
           updateParticipantCount();
           syncLocalMediaState();
+          refreshParticipants();
 
           if (!presenceStateRef.current.hasJoined) {
             presenceStateRef.current.hasJoined = true;
@@ -439,6 +525,7 @@ export default function JoinMeeting() {
 
         api.addEventListener("participantJoined", (data) => {
           updateParticipantCount();
+          refreshParticipants();
 
           const participantId = data?.id || data?.participantId;
           const participantName =
@@ -457,6 +544,7 @@ export default function JoinMeeting() {
 
         api.addEventListener("participantLeft", (data) => {
           updateParticipantCount();
+          refreshParticipants();
 
           const participantId = data?.id || data?.participantId;
           const participantName = resolveParticipantName(participantId);
@@ -484,6 +572,74 @@ export default function JoinMeeting() {
           setIsScreenSharing(Boolean(data?.on));
         });
 
+        api.addEventListener("raiseHandUpdated", (data) => {
+          const participantId = data?.id || data?.participantId;
+          const handRaised = Boolean(data?.handRaised);
+          if (!participantId) return;
+
+          setRaisedHands((prev) => {
+            if (handRaised) {
+              return { ...prev, [participantId]: true };
+            }
+
+            if (!prev[participantId]) {
+              return prev;
+            }
+
+            const next = { ...prev };
+            delete next[participantId];
+            return next;
+          });
+
+          if (participantId === localParticipantIdRef.current) {
+            setIsHandRaised(handRaised);
+            return;
+          }
+
+          if (isModerator && handRaised) {
+            const participantName = resolveParticipantName(participantId);
+            toast.success(`${participantName} raised hand`);
+          }
+        });
+
+        api.addEventListener("displayNameChange", (data) => {
+          const participantId = data?.id || data?.participantId;
+          const displayName = data?.displayname || data?.displayName;
+          if (!participantId || !displayName) return;
+
+          participantNamesRef.current.set(participantId, displayName);
+          setParticipants((prev) =>
+            prev.map((participant) =>
+              participant.id === participantId
+                ? { ...participant, name: displayName }
+                : participant,
+            ),
+          );
+        });
+
+        api.addEventListener("endpointTextMessageReceived", (data) => {
+          let payload = null;
+
+          try {
+            payload = JSON.parse(data?.eventData?.text || "{}");
+          } catch {
+            return;
+          }
+
+          if (payload?.type !== "moderator-lower-hand") {
+            return;
+          }
+
+          if (payload?.meetingId && payload.meetingId !== meetingId) {
+            return;
+          }
+
+          if (!isModerator && isHandRaised) {
+            api.executeCommand("toggleRaiseHand");
+            toast("Teacher lowered your hand");
+          }
+        });
+
         api.addEventListener("readyToClose", () => {
           if (
             presenceStateRef.current.hasJoined &&
@@ -501,6 +657,9 @@ export default function JoinMeeting() {
           setIsScreenSharing(false);
           setIsTogglingMic(false);
           setIsTogglingCamera(false);
+          setIsHandRaised(false);
+          setParticipants([]);
+          setRaisedHands({});
 
           if (
             presenceStateRef.current.hasJoined &&
@@ -529,15 +688,7 @@ export default function JoinMeeting() {
         jitsiApiRef.current = null;
       }
     };
-  }, [
-    hasStartedJoin,
-    meetingConfig,
-    userName,
-    isMicMuted,
-    isCameraMuted,
-    handleLeave,
-    sendPresenceEvent,
-  ]);
+  }, [hasStartedJoin, meetingConfig, userName, handleLeave, sendPresenceEvent]);
 
   const handleJoin = useCallback(async () => {
     if (!meetingId) return;
@@ -632,6 +783,60 @@ export default function JoinMeeting() {
     }
   };
 
+  const toggleHandRaise = () => {
+    if (!jitsiApiRef.current) return;
+    jitsiApiRef.current.executeCommand("toggleRaiseHand");
+  };
+
+  const requestLowerHand = (participantId) => {
+    const api = jitsiApiRef.current;
+    if (!api || !participantId) return;
+
+    api.executeCommand(
+      "sendEndpointTextMessage",
+      participantId,
+      JSON.stringify({
+        type: "moderator-lower-hand",
+        meetingId,
+      }),
+    );
+  };
+
+  const lowerAllHands = () => {
+    if (!isModerator) return;
+
+    const raisedParticipantIds = Object.keys(raisedHands).filter(
+      (participantId) => participantId !== localParticipantIdRef.current,
+    );
+
+    if (raisedParticipantIds.length === 0) {
+      toast("No raised hands to lower");
+      return;
+    }
+
+    raisedParticipantIds.forEach((participantId) => {
+      requestLowerHand(participantId);
+    });
+
+    // Optimistically clear remote raised hands in moderator view.
+    setRaisedHands((prev) => {
+      const next = { ...prev };
+      raisedParticipantIds.forEach((participantId) => {
+        delete next[participantId];
+      });
+      return next;
+    });
+
+    toast.success("Lower hand request sent");
+  };
+
+  const muteParticipant = (participantId, participantName) => {
+    if (!jitsiApiRef.current || !participantId || !isModerator) return;
+
+    jitsiApiRef.current.executeCommand("muteParticipant", participantId);
+    toast.success(`${participantName || "Participant"} muted`);
+  };
+
   if (isLoading) {
     return (
       <div className={styles.loadingContainer}>
@@ -649,6 +854,11 @@ export default function JoinMeeting() {
       </div>
     );
   }
+
+  const remoteParticipants = participants.filter(
+    (participant) => participant.id !== localParticipantIdRef.current,
+  );
+  const raisedHandsCount = Object.keys(raisedHands).length;
 
   return (
     <div className={styles.container}>
@@ -735,6 +945,12 @@ export default function JoinMeeting() {
                 👥 {participantCount} participant
                 {participantCount !== 1 ? "s" : ""}
               </span>
+              {raisedHandsCount > 0 && (
+                <span className={styles.raiseBadge}>
+                  ✋ {raisedHandsCount} hand
+                  {raisedHandsCount > 1 ? "s" : ""} raised
+                </span>
+              )}
               {isScreenSharing && (
                 <span className={styles.statusBadge}>Screen sharing on</span>
               )}
@@ -782,6 +998,16 @@ export default function JoinMeeting() {
                 <ScreenShareIcon />
               </button>
               <button
+                className={`${styles.controlButton} ${
+                  isHandRaised ? styles.active : ""
+                }`}
+                onClick={toggleHandRaise}
+                title={isHandRaised ? "Lower hand" : "Raise hand"}
+                aria-label={isHandRaised ? "Lower hand" : "Raise hand"}
+              >
+                <HandRaiseIcon active={isHandRaised} />
+              </button>
+              <button
                 className={`${styles.controlButton} ${styles.hangup}`}
                 onClick={() => handleLeave(true)}
                 title="Leave Meeting"
@@ -792,6 +1018,51 @@ export default function JoinMeeting() {
             </div>
 
             <div className={styles.controlsRight}>
+              {isModerator && remoteParticipants.length > 0 && (
+                <div className={styles.moderatorPanel}>
+                  <div className={styles.moderatorHeader}>
+                    <div className={styles.moderatorTitle}>Students</div>
+                    <button
+                      className={styles.lowerAllHandsButton}
+                      onClick={lowerAllHands}
+                      disabled={raisedHandsCount === 0}
+                      title="Lower all raised hands"
+                    >
+                      Lower all
+                    </button>
+                  </div>
+                  <div className={styles.moderatorList}>
+                    {remoteParticipants.map((participant) => (
+                      <div className={styles.moderatorRow} key={participant.id}>
+                        <span className={styles.participantName}>
+                          {participant.name}
+                          {raisedHands[participant.id] && (
+                            <span className={styles.handTag}> ✋</span>
+                          )}
+                        </span>
+                        <button
+                          className={styles.muteParticipantButton}
+                          onClick={() =>
+                            muteParticipant(participant.id, participant.name)
+                          }
+                          title={`Mute ${participant.name}`}
+                        >
+                          <MicIcon muted />
+                        </button>
+                        {raisedHands[participant.id] && (
+                          <button
+                            className={styles.lowerHandButton}
+                            onClick={() => requestLowerHand(participant.id)}
+                            title={`Lower ${participant.name}'s hand`}
+                          >
+                            Lower
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               <Button
                 variant="secondary"
                 onClick={() => handleLeave(true)}
