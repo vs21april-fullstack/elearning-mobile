@@ -6,7 +6,7 @@ export default function App() {
   return (
     <>
       <Router />
-      <Toaster />
+      <Toaster position="top-center" />
     </>
   );
 }
