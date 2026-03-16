@@ -79,11 +79,70 @@ function parseMeetingDateTime(
   return parsedDate;
 }
 
+function parseTimeToMinutes(timeValue, fallbackHours = 0, fallbackMinutes = 0) {
+  if (!timeValue) {
+    return fallbackHours * 60 + fallbackMinutes;
+  }
+
+  const normalized = String(timeValue).trim().toUpperCase();
+  const match12Hour = normalized.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/);
+
+  if (match12Hour) {
+    let hours = Number.parseInt(match12Hour[1], 10);
+    const minutes = Number.parseInt(match12Hour[2], 10);
+    const period = match12Hour[3];
+
+    if (period === "AM" && hours === 12) {
+      hours = 0;
+    }
+
+    if (period === "PM" && hours !== 12) {
+      hours += 12;
+    }
+
+    return hours * 60 + minutes;
+  }
+
+  const [hoursText, minutesText] = normalized.split(":");
+  const hours = Number.parseInt(hoursText, 10);
+  const minutes = Number.parseInt(minutesText, 10);
+
+  if (Number.isNaN(hours) || Number.isNaN(minutes)) {
+    return fallbackHours * 60 + fallbackMinutes;
+  }
+
+  return hours * 60 + minutes;
+}
+
+function getMeetingWindow(meeting) {
+  const startDateTime = parseMeetingDateTime(
+    meeting.date,
+    meeting.startTime,
+    0,
+    0,
+  );
+  const endDateTime = parseMeetingDateTime(
+    meeting.date,
+    meeting.endTime,
+    23,
+    59,
+  );
+
+  const startMinutes = parseTimeToMinutes(meeting.startTime, 0, 0);
+  const endMinutes = parseTimeToMinutes(meeting.endTime, 23, 59);
+
+  if (endMinutes <= startMinutes) {
+    endDateTime.setDate(endDateTime.getDate() + 1);
+  }
+
+  return { startDateTime, endDateTime };
+}
+
 export default function MeetingsDashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const isTeacher = user?.role === "teacher";
-  const [now] = useState(() => new Date());
+  const [now, setNow] = useState(() => new Date());
   const [calMonth, setCalMonth] = useState(now.getMonth());
   const [calYear, setCalYear] = useState(now.getFullYear());
   const [selectedCourseId, setSelectedCourseId] = useState("all");
@@ -100,6 +159,14 @@ export default function MeetingsDashboard() {
         : fetchMeetingsForStudent(user.id),
     enabled: !!user?.id,
   });
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      setNow(new Date());
+    }, 30000);
+
+    return () => clearInterval(intervalId);
+  }, []);
 
   const courseOptions = useMemo(() => {
     const courseMap = new Map();
@@ -129,16 +196,18 @@ export default function MeetingsDashboard() {
     });
   }, [meetings, selectedCourseId, selectedDate]);
 
+  const filteredMeetingsWithWindow = useMemo(() => {
+    return filteredMeetings.map((meeting) => ({
+      ...meeting,
+      ...getMeetingWindow(meeting),
+    }));
+  }, [filteredMeetings]);
+
   const upcomingMeetings = useMemo(() => {
-    return filteredMeetings
-      .filter(
-        (meeting) =>
-          parseMeetingDateTime(meeting.date, meeting.endTime, 23, 59) >= now,
-      )
+    return filteredMeetingsWithWindow
+      .filter((meeting) => meeting.endDateTime >= now)
       .sort((a, b) => {
-        const dateDiff =
-          parseMeetingDateTime(a.date, a.startTime) -
-          parseMeetingDateTime(b.date, b.startTime);
+        const dateDiff = a.startDateTime - b.startDateTime;
 
         if (dateDiff !== 0) {
           return dateDiff;
@@ -146,20 +215,13 @@ export default function MeetingsDashboard() {
 
         return (a.startTime || "").localeCompare(b.startTime || "");
       });
-  }, [filteredMeetings, now]);
+  }, [filteredMeetingsWithWindow, now]);
 
   const pastMeetings = useMemo(() => {
-    return filteredMeetings
-      .filter(
-        (meeting) =>
-          parseMeetingDateTime(meeting.date, meeting.endTime, 23, 59) < now,
-      )
-      .sort(
-        (a, b) =>
-          parseMeetingDateTime(b.date, b.startTime) -
-          parseMeetingDateTime(a.date, a.startTime),
-      );
-  }, [filteredMeetings, now]);
+    return filteredMeetingsWithWindow
+      .filter((meeting) => meeting.endDateTime < now)
+      .sort((a, b) => b.startDateTime - a.startDateTime);
+  }, [filteredMeetingsWithWindow, now]);
 
   const filteredUpcomingMeetings = upcomingMeetings;
 
@@ -354,6 +416,8 @@ export default function MeetingsDashboard() {
             <div className={styles.meetingsList}>
               {activeMeetings.map((meeting) => {
                 const meetingDate = new Date(meeting.date);
+                const canJoinNow =
+                  now >= meeting.startDateTime && now <= meeting.endDateTime;
                 const isToday =
                   meetingDate.getDate() === now.getDate() &&
                   meetingDate.getMonth() === now.getMonth() &&
@@ -378,7 +442,7 @@ export default function MeetingsDashboard() {
                         {isToday
                           ? "🔔 Today"
                           : meetingDate.toLocaleDateString()}{" "}
-                        at {meeting.startTime}
+                        at {meeting.startTime} - {meeting.endTime}
                       </span>
                     </div>
 
@@ -390,9 +454,13 @@ export default function MeetingsDashboard() {
                         })
                       }
                       className={styles.joinBtn}
-                      disabled={activeTab === "past"}
+                      disabled={activeTab === "past" || !canJoinNow}
                     >
-                      {activeTab === "past" ? "Completed" : "📞 Join"}
+                      {activeTab === "past"
+                        ? "Completed"
+                        : canJoinNow
+                          ? "📞 Join"
+                          : "Starts Soon"}
                     </Button>
                   </div>
                 );
