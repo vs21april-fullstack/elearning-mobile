@@ -1,9 +1,18 @@
 # Ignore everything
 *
 
-# Allow dist folder
+# Allow dist
 !dist/
 !dist/**
 
+# Allow important files
+!package.json
+!package-lock.json
+!yarn.lock
+
+# Allow env example (not real env)
+!.env.example
+
 # Allow gitignore
 !.gitignore
+!README.md
