@@ -5,8 +5,5 @@
 !dist/
 !dist/**
 
-# Allow gitignore itself
+# Allow gitignore
 !.gitignore
-
-# Optional: allow README or config if needed
-!README.md
