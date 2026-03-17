@@ -1,0 +1,96 @@
+# =========================
+# Logs
+# =========================
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# =========================
+# Runtime data
+# =========================
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# =========================
+# Coverage & testing
+# =========================
+coverage
+.nyc_output
+
+# =========================
+# Dependencies
+# =========================
+node_modules/
+
+# =========================
+# Build output
+# =========================
+dist/
+build/
+.tmp/
+.cache/
+
+# =========================
+# Environment variables
+# =========================
+.env
+.env.*
+!.env.example
+
+# =========================
+# Local config
+# =========================
+*.local
+
+# =========================
+# OS files
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# Editor / IDE
+# =========================
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# =========================
+# PM2
+# =========================
+.pm2
+pids
+
+# =========================
+# Docker (optional)
+# =========================
+.dockerignore
+
+# =========================
+# Fastify specific
+# =========================
+# Fastify temp files (if any plugins create them)
+.fastify
+
+# =========================
+# TypeScript (if used)
+# =========================
+*.tsbuildinfo
+
+# =========================
+# Misc
+# =========================
+*.tgz
+*.gz
+*.zip

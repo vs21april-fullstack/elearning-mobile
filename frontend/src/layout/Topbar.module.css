@@ -150,7 +150,11 @@
   }
 
   .userName {
-    display: none;
+    max-width: 90px;
+    font-size: 0.82rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .menu {
