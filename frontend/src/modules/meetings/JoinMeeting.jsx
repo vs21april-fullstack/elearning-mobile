@@ -948,12 +948,12 @@ export default function JoinMeeting() {
           <div className={styles.controls}>
             <div className={styles.controlsLeft}>
               <span className={styles.participantCount}>
-                👥 {participantCount} participant
+                Participants: {participantCount} participant
                 {participantCount !== 1 ? "s" : ""}
               </span>
               {raisedHandsCount > 0 && (
                 <span className={styles.raiseBadge}>
-                  ✋ {raisedHandsCount} hand
+                  Raised hands: {raisedHandsCount} hand
                   {raisedHandsCount > 1 ? "s" : ""} raised
                 </span>
               )}
@@ -1043,7 +1043,7 @@ export default function JoinMeeting() {
                         <span className={styles.participantName}>
                           {participant.name}
                           {raisedHands[participant.id] && (
-                            <span className={styles.handTag}> ✋</span>
+                            <span className={styles.handTag}> Hand raised</span>
                           )}
                         </span>
                         <button

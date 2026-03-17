@@ -75,17 +75,34 @@ const ensureMeetingJoinAccess = async (meeting, req) => {
 
 // Meeting CRUD
 export const createMeeting = async (req, reply) => {
+    const userRole = req.user?.role
+    const userId = req.user?.id
+    const requestedTeacher = req.body?.teacher
+
+    if (userRole === 'admin' && !requestedTeacher) {
+        throw new AuthorizationError('Teacher is required to create a meeting')
+    }
+
+    const ownerTeacherId = userRole === 'admin' ? requestedTeacher : userId
+
+    if (userRole === 'admin') {
+        const teacherExists = await User.findOne({ _id: ownerTeacherId, role: 'teacher', isActive: true }).select('_id')
+        if (!teacherExists) {
+            throw new NotFoundError('Teacher', ownerTeacherId)
+        }
+    }
+
     const payload = {
         ...req.body,
-        teacher: req.user.id
+        teacher: ownerTeacherId
     }
 
     if (payload.course) {
         const assignedCourse = await Course.findOne({
             _id: payload.course,
             $or: [
-                { teacher: req.user.id },
-                { teachers: req.user.id }
+                { teacher: ownerTeacherId },
+                { teachers: ownerTeacherId }
             ],
             isActive: true
         }).select('_id')

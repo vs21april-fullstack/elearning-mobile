@@ -6,10 +6,10 @@ import {
   enrollStudentInCourse,
   unenrollStudentFromCourse,
 } from "../students.api";
-import { fetchTeachers } from "../../teachers/teachers.api";
-import { fetchCoursesByTeacher } from "../../courses/courses.api";
+import { fetchCourses } from "../../courses/courses.api";
 import toast from "react-hot-toast";
 import Button from "../../../components/Button";
+import { useConfirm } from "../../../app/confirmContext";
 import modalStyles from "../../../components/Modal.module.css";
 import styles from "./ManageCourses.module.css";
 
@@ -64,6 +64,7 @@ const selectStyles = {
 
 export default function ManageCourses({ student, onClose }) {
   const queryClient = useQueryClient();
+  const confirm = useConfirm();
   const [selectedTeacher, setSelectedTeacher] = useState(null);
   const [selectedCourse, setSelectedCourse] = useState(null);
 
@@ -74,20 +75,12 @@ export default function ManageCourses({ student, onClose }) {
     enabled: !!student._id,
   });
 
-  const { data: teachersData } = useQuery({
-    queryKey: ["teachers"],
-    queryFn: () => fetchTeachers({ page: 1, limit: 1000 }),
+  const { data: allCoursesData, isLoading: allCoursesLoading } = useQuery({
+    queryKey: ["courses-all"],
+    queryFn: () => fetchCourses({ page: 1, limit: 1000 }),
   });
 
-  const { data: teacherCoursesData, isLoading: teacherCoursesLoading } =
-    useQuery({
-      queryKey: ["teacherCourses", selectedTeacher],
-      queryFn: () => fetchCoursesByTeacher(selectedTeacher),
-      enabled: !!selectedTeacher,
-    });
-
-  const allTeachers = teachersData?.data || [];
-  const teacherCourses = teacherCoursesData || [];
+  const allCourses = allCoursesData?.data || [];
   const studentCourses = enrolledCourses || [];
 
   // Filter to only show active enrollments (not dropped)
@@ -102,10 +95,29 @@ export default function ManageCourses({ student, onClose }) {
       : enrollment.course._id,
   );
 
-  const teacherOptions = allTeachers.filter((teacher) => teacher.isActive);
+  const availableCourses = allCourses.filter(
+    (course) => !enrolledCourseIds.includes(course._id),
+  );
 
-  const availableCourses = selectedTeacher
-    ? teacherCourses.filter((course) => !enrolledCourseIds.includes(course._id))
+  const selectedCourseData =
+    availableCourses.find((course) => course._id === selectedCourse) || null;
+
+  const availableTeachers = selectedCourseData
+    ? [
+        ...(selectedCourseData.teacher ? [selectedCourseData.teacher] : []),
+        ...(Array.isArray(selectedCourseData.teachers)
+          ? selectedCourseData.teachers
+          : []),
+      ]
+        .map((teacher) =>
+          typeof teacher === "string" ? { _id: teacher } : teacher,
+        )
+        .filter((teacher, index, array) => {
+          const id = String(teacher?._id || "");
+          return (
+            id && array.findIndex((t) => String(t?._id || "") === id) === index
+          );
+        })
     : [];
 
   const enrollMutation = useMutation({
@@ -157,8 +169,15 @@ export default function ManageCourses({ student, onClose }) {
     }
   };
 
-  const handleUnenroll = (courseId) => {
-    if (confirm("Are you sure you want to unenroll from this course?")) {
+  const handleUnenroll = async (courseId) => {
+    const confirmed = await confirm({
+      title: "Unenroll Course",
+      message: "Are you sure you want to unenroll from this course?",
+      confirmText: "Unenroll",
+      confirmVariant: "danger",
+    });
+
+    if (confirmed) {
       unenrollMutation.mutate({
         userId: student._id,
         courseId,
@@ -188,37 +207,7 @@ export default function ManageCourses({ student, onClose }) {
             <div className="mb-4">
               <h6 className="fw-bold mb-3">Enroll in Additional Course</h6>
               <div className="row align-items-end">
-                <div className="col-md-6">
-                  <label className="form-label">Select Teacher</label>
-                  <Select
-                    options={teacherOptions.map((teacher) => ({
-                      value: teacher._id,
-                      label: `${teacher.name} (${teacher.email})`,
-                    }))}
-                    value={
-                      selectedTeacher
-                        ? {
-                            value: selectedTeacher,
-                            label: teacherOptions.find(
-                              (t) => t._id === selectedTeacher,
-                            )
-                              ? `${teacherOptions.find((t) => t._id === selectedTeacher).name} (${teacherOptions.find((t) => t._id === selectedTeacher).email})`
-                              : "",
-                          }
-                        : null
-                    }
-                    onChange={(option) => {
-                      setSelectedTeacher(option ? option.value : null);
-                      setSelectedCourse(null);
-                    }}
-                    isClearable
-                    placeholder="Select teacher first"
-                    styles={selectStyles}
-                    noOptionsMessage={() => "No teachers found"}
-                  />
-                </div>
-
-                <div className="col-md-4">
+                <div className="col-md-5">
                   <label className="form-label">Select Course</label>
                   <Select
                     options={availableCourses.map((course) => ({
@@ -237,33 +226,66 @@ export default function ManageCourses({ student, onClose }) {
                           }
                         : null
                     }
+                    onChange={(option) => {
+                      setSelectedCourse(option ? option.value : null);
+                      setSelectedTeacher(null);
+                    }}
+                    isClearable
+                    isLoading={allCoursesLoading}
+                    placeholder="Select course first"
+                    styles={selectStyles}
+                    noOptionsMessage={() => "No courses available"}
+                  />
+                </div>
+
+                <div className="col-md-5">
+                  <label className="form-label">Select Teacher</label>
+                  <Select
+                    options={availableTeachers.map((teacher) => ({
+                      value: teacher._id,
+                      label: teacher.email
+                        ? `${teacher.name || "Teacher"} (${teacher.email})`
+                        : teacher.name || "Teacher",
+                    }))}
+                    value={
+                      selectedTeacher
+                        ? {
+                            value: selectedTeacher,
+                            label: availableTeachers.find(
+                              (t) => t._id === selectedTeacher,
+                            )
+                              ? `${availableTeachers.find((t) => t._id === selectedTeacher).name || "Teacher"}${availableTeachers.find((t) => t._id === selectedTeacher).email ? ` (${availableTeachers.find((t) => t._id === selectedTeacher).email})` : ""}`
+                              : "",
+                          }
+                        : null
+                    }
                     onChange={(option) =>
-                      setSelectedCourse(option ? option.value : null)
+                      setSelectedTeacher(option ? option.value : null)
                     }
                     isClearable
-                    isDisabled={!selectedTeacher}
-                    isLoading={teacherCoursesLoading}
+                    isDisabled={!selectedCourse}
                     placeholder={
-                      selectedTeacher
-                        ? "Select a course to enroll"
-                        : "Choose teacher to see courses"
+                      selectedCourse
+                        ? "Select teacher for this course"
+                        : "Choose course to see teachers"
                     }
                     styles={selectStyles}
                     noOptionsMessage={() =>
-                      selectedTeacher
-                        ? "No courses found for selected teacher"
-                        : "Choose teacher first"
+                      selectedCourse
+                        ? "No teachers assigned to selected course"
+                        : "Choose course first"
                     }
                   />
                 </div>
 
-                <div className="col-md-2">
+                <div className="col-md-2 col-12 mt-3 mt-md-0 d-grid">
                   <Button
                     variant="primary"
+                    className="w-100"
                     onClick={handleEnroll}
                     disabled={
-                      !selectedTeacher ||
                       !selectedCourse ||
+                      !selectedTeacher ||
                       enrollMutation.isPending
                     }
                     loading={enrollMutation.isPending}

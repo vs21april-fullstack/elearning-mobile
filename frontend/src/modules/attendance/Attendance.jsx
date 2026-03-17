@@ -2,11 +2,11 @@ import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchMeetings } from "../meetings/meetings.api";
 import { fetchTeachers } from "../teachers/teachers.api";
-import { fetchCourses } from "../courses/courses.api";
 import { getMeetingLogColumns } from "./attendance.columns";
 import DataTable from "../../components/DataTable";
 import Spinner from "../../components/Spinner";
 import EmptyState from "../../components/EmptyState";
+import MeetingIcon from "../../assets/svg/MeetingIcon";
 import styles from "./Attendance.module.css";
 
 export default function Attendance() {
@@ -20,20 +20,14 @@ export default function Attendance() {
     staleTime: 5 * 60 * 1000,
   });
 
-  // Fetch courses for dropdown
-  const { data: coursesData } = useQuery({
-    queryKey: ["courses-all"],
-    queryFn: () => fetchCourses({ page: 1, limit: 100 }),
-    staleTime: 5 * 60 * 1000,
-  });
-
-  // Fetch meeting logs with active filters
+  // Fetch meeting logs with active filters - only completed meetings
   const { data: meetingsData, isLoading } = useQuery({
     queryKey: ["meeting-logs", selectedTeacherId, selectedCourseId],
     queryFn: () =>
       fetchMeetings({
         page: 1,
         limit: 200,
+        status: "completed",
         ...(selectedTeacherId && { teacherId: selectedTeacherId }),
         ...(selectedCourseId && { courseId: selectedCourseId }),
       }),
@@ -41,28 +35,65 @@ export default function Attendance() {
   });
 
   const teachers = useMemo(() => teachersData?.data ?? [], [teachersData]);
-  const courses = useMemo(() => coursesData?.data ?? [], [coursesData]);
-  const meetings = useMemo(() => meetingsData?.data ?? [], [meetingsData]);
+  const selectedTeacher = useMemo(
+    () =>
+      teachers.find(
+        (teacher) =>
+          String(teacher?._id ?? teacher?.id ?? "") === selectedTeacherId,
+      ) || null,
+    [teachers, selectedTeacherId],
+  );
+
+  const courses = useMemo(() => {
+    if (!selectedTeacherId || !selectedTeacher) return [];
+    return selectedTeacher.assignedCourses || [];
+  }, [selectedTeacherId, selectedTeacher]);
+
+  const meetings = useMemo(() => {
+    const rows = meetingsData?.data ?? [];
+    return rows.filter((meeting) => {
+      if (meeting?.status !== "completed") return false;
+
+      if (selectedTeacherId) {
+        const meetingTeacherId = meeting?.teacher?._id || meeting?.teacher;
+        if (String(meetingTeacherId || "") !== selectedTeacherId) return false;
+      }
+
+      if (selectedCourseId) {
+        const meetingCourseId = meeting?.course?._id || meeting?.course;
+        if (String(meetingCourseId || "") !== selectedCourseId) return false;
+      }
+
+      return true;
+    });
+  }, [meetingsData, selectedTeacherId, selectedCourseId]);
 
   const columns = getMeetingLogColumns();
 
   const hasFilters = selectedTeacherId || selectedCourseId;
 
   return (
-    <div className="container-fluid p-4">
+    <div className={`container-fluid py-4 ${styles.container}`}>
       {/* Page Header */}
-      <div className={styles.pageHeader}>
-        <div>
-          <h2 className={styles.pageTitle}>Teacher Meeting Logs</h2>
-          <p className={styles.pageSubtext}>
-            View all teacher meeting sessions. Filter by teacher or course.
-          </p>
+      <div className={`animate-fade-in ${styles.heroBanner}`}>
+        <div className={styles.pageHeader}>
+          <div>
+            <h2 className={styles.pageTitle}>
+              <span className="d-inline-flex align-items-center gap-2">
+                <MeetingIcon size={22} color="white" />
+                Teacher Meeting Logs
+              </span>
+            </h2>
+            <p className={styles.pageSubtext}>
+              View all teacher meeting sessions. Filter by teacher or course.
+            </p>
+          </div>
+          {meetings.length > 0 && (
+            <span className={styles.recordsBadge}>
+              {meetings.length} Record{meetings.length !== 1 ? "s" : ""}
+            </span>
+          )}
         </div>
-        {meetings.length > 0 && (
-          <span className={styles.recordsBadge}>
-            {meetings.length} Record{meetings.length !== 1 ? "s" : ""}
-          </span>
-        )}
       </div>
 
       {/* Filter Bar */}
@@ -72,7 +103,10 @@ export default function Attendance() {
           <select
             className={styles.filterSelect}
             value={selectedTeacherId}
-            onChange={(e) => setSelectedTeacherId(e.target.value)}
+            onChange={(e) => {
+              setSelectedTeacherId(e.target.value);
+              setSelectedCourseId("");
+            }}
           >
             <option value="">All Teachers</option>
             {teachers.map((t) => (
@@ -87,10 +121,13 @@ export default function Attendance() {
           <label className={styles.filterLabel}>Course</label>
           <select
             className={styles.filterSelect}
+            disabled={!selectedTeacherId}
             value={selectedCourseId}
             onChange={(e) => setSelectedCourseId(e.target.value)}
           >
-            <option value="">All Courses</option>
+            <option value="">
+              {selectedTeacherId ? "All Coursesss" : "Select a teacher first"}
+            </option>
             {courses.map((c) => (
               <option key={c._id} value={c._id}>
                 {c.title}

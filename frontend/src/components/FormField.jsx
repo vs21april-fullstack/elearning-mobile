@@ -1,5 +1,9 @@
 import { Controller } from "react-hook-form";
 import styles from "./FormField.module.css";
+import {
+  isNativePickerType,
+  openNativePicker,
+} from "../utils/openNativePicker";
 
 // Helper function to get nested error from path
 const getNestedError = (errors, path) => {
@@ -37,6 +41,7 @@ export function FormField({
   ...props
 }) {
   const error = getNestedError(errors, name);
+  const shouldOpenPickerOnFieldClick = isNativePickerType(type);
 
   return (
     <div className={styles.fieldWrapper}>
@@ -53,7 +58,13 @@ export function FormField({
             {...field}
             {...props}
             type={type}
-            className={`${styles.inputBase} ${error ? styles.inputError : ""}`}
+            onMouseDown={(event) => {
+              if (shouldOpenPickerOnFieldClick) {
+                openNativePicker(event);
+              }
+              props.onMouseDown?.(event);
+            }}
+            className={`${styles.inputBase} ${error ? styles.inputError : ""} ${shouldOpenPickerOnFieldClick ? "cursor-pointer" : ""}`}
             placeholder={placeholder}
           />
         )}
@@ -228,6 +239,8 @@ export function Input({
   className = "",
   ...props
 }) {
+  const shouldOpenPickerOnFieldClick = isNativePickerType(type);
+
   return (
     <div>
       {label && (
@@ -240,8 +253,14 @@ export function Input({
         type={type}
         value={value}
         onChange={onChange}
+        onMouseDown={(event) => {
+          if (shouldOpenPickerOnFieldClick) {
+            openNativePicker(event);
+          }
+          props.onMouseDown?.(event);
+        }}
         placeholder={placeholder}
-        className={`${styles.inputBase} ${className}`}
+        className={`${styles.inputBase} ${className} ${shouldOpenPickerOnFieldClick ? "cursor-pointer" : ""}`}
         {...props}
       />
     </div>

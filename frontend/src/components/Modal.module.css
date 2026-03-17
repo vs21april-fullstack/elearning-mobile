@@ -3,10 +3,13 @@
   background-color: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
+  z-index: 1300;
 }
 
 .modalDialog {
   margin: 30px auto;
+  max-width: min(92vw, 680px);
+  z-index: 1301;
 }
 
 .modalContent {
@@ -42,4 +45,35 @@
   border: none;
   padding: 20px 32px 32px;
   gap: 12px;
+}
+
+@media (max-width: 768px) {
+  .modalDialog {
+    margin: 14px auto;
+    max-width: 94vw;
+  }
+
+  .modalContent {
+    border-radius: 18px;
+  }
+
+  .modalHeader {
+    padding: 18px 18px;
+    border-radius: 18px 18px 0 0;
+  }
+
+  .modalTitle {
+    font-size: 1.05rem;
+  }
+
+  .modalBody {
+    padding: 18px;
+    max-height: calc(100dvh - 120px);
+  }
+
+  .modalFooter {
+    padding: 14px 18px 18px;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
 }

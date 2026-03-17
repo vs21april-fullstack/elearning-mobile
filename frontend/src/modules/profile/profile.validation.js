@@ -13,7 +13,6 @@ export const updateProfileSchema = Yup.object({
         .email('Invalid email format')
         .required('Email is required'),
     phone: Yup.string()
-        .matches(/^[0-9]{10}$/, 'Phone must be 10 digits')
         .required('Phone is required'),
     parents: Yup.object({
         father: Yup.object({

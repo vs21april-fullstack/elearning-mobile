@@ -24,7 +24,7 @@ export default async function (app) {
     // Meeting CRUD
     app.post(
         '/',
-        { preHandler: [roleGuard(['teacher']), validate(createMeetingSchema)] },
+        { preHandler: [roleGuard(['admin', 'teacher']), validate(createMeetingSchema)] },
         createMeeting
     )
 

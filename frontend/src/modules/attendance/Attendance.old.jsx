@@ -19,6 +19,7 @@ import Button from "../../components/Button";
 import EmptyState from "../../components/EmptyState";
 import AttendanceMarkForm from "./components/AttendanceMarkForm";
 import { Input } from "../../components/FormField";
+import { useConfirm } from "../../app/confirmContext";
 import styles from "./Attendance.module.css";
 import toast from "react-hot-toast";
 
@@ -39,6 +40,7 @@ export default function Attendance() {
     new Date().toISOString().split("T")[0],
   );
   const queryClient = useQueryClient();
+  const confirm = useConfirm();
 
   // Manual attendance query
   const { data: manualData, isLoading: manualLoading } = useQuery({
@@ -155,11 +157,18 @@ export default function Attendance() {
     [selectedAttendance, classFilter, dateFilter, markMutation, updateMutation],
   );
 
-  const handleLogout = useCallback(() => {
-    if (window.confirm("Are you sure you want to record logout?")) {
+  const handleLogout = useCallback(async () => {
+    const confirmed = await confirm({
+      title: "Record Logout",
+      message: "Are you sure you want to record logout?",
+      confirmText: "Record",
+      confirmVariant: "danger",
+    });
+
+    if (confirmed) {
       logoutMutation.mutate();
     }
-  }, [logoutMutation]);
+  }, [confirm, logoutMutation]);
 
   const manualColumns = getAttendanceColumns(handleEdit);
   const loginColumns = getLoginAttendanceColumns();

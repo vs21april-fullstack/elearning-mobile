@@ -3,7 +3,7 @@
  */
 
 import EditIcon from "../../assets/svg/EditIcon";
-import DeleteIcon from "../../assets/svg/DeleteIcon";
+import CourseIcon from "../../assets/svg/CourseIcon";
 import styles from "../../styles/Columns.module.css";
 
 function CoursePills({ courses }) {
@@ -32,7 +32,11 @@ function CoursePills({ courses }) {
   );
 }
 
-export const getTeacherColumns = (handleEdit, handleDelete, handleAssign) => [
+export const getTeacherColumns = (
+  handleEdit,
+  handleToggleActive,
+  handleAssign,
+) => [
   {
     header: "Teacher",
     accessor: "name",
@@ -48,13 +52,24 @@ export const getTeacherColumns = (handleEdit, handleDelete, handleAssign) => [
     accessor: "phone",
   },
   {
-    header: "Qualification",
+    header: "Qualifications",
     accessor: "qualification",
     cell: (row) => {
       const qualifications = row.teacherProfile?.qualifications;
       if (!qualifications || qualifications.length === 0) return "N/A";
-      const latest = qualifications[0];
-      return `${latest.degree} - ${latest.university}`;
+
+      const formatted = qualifications
+        .map((qualification) => {
+          const degree = qualification?.degree?.trim();
+          const university = qualification?.university?.trim();
+
+          if (!degree && !university) return null;
+          if (degree && university) return `${degree} - ${university}`;
+          return degree || university;
+        })
+        .filter(Boolean);
+
+      return formatted.length ? formatted.join(", ") : "N/A";
     },
   },
   {
@@ -80,6 +95,19 @@ export const getTeacherColumns = (handleEdit, handleDelete, handleAssign) => [
     },
   },
   {
+    header: "Status",
+    accessor: "isActive",
+    cell: (row) => (
+      <span
+        className={`${styles.statusBadge} ${
+          row.isActive ? styles.statusPresent : styles.statusAbsent
+        }`}
+      >
+        {row.isActive ? "Active" : "Inactive"}
+      </span>
+    ),
+  },
+  {
     header: "Assigned Courses",
     accessor: "assignedCourses",
     cell: (row) => <CoursePills courses={row.assignedCourses || []} />,
@@ -93,7 +121,7 @@ export const getTeacherColumns = (handleEdit, handleDelete, handleAssign) => [
           onClick={() => handleAssign(row)}
           className={`${styles.actionButton} ${styles.buttonInfo}`}
         >
-          📚 Assign
+          <CourseIcon size={16} color="white" /> Assign
         </button>
         <button
           onClick={() => handleEdit(row)}
@@ -102,10 +130,27 @@ export const getTeacherColumns = (handleEdit, handleDelete, handleAssign) => [
           <EditIcon size={16} color="white" /> Edit
         </button>
         <button
-          onClick={() => handleDelete(row)}
-          className={`${styles.actionButton} ${styles.buttonDelete}`}
+          onClick={() => handleToggleActive(row)}
+          className={styles.toggleButton}
+          aria-pressed={row.isActive}
+          title={row.isActive ? "Set Inactive" : "Set Active"}
         >
-          <DeleteIcon size={16} color="white" /> Delete
+          <span
+            className={`${styles.toggleTrack} ${
+              row.isActive
+                ? styles.toggleTrackActive
+                : styles.toggleTrackInactive
+            }`}
+          >
+            <span
+              className={`${styles.toggleThumb} ${
+                row.isActive ? styles.toggleThumbActive : ""
+              }`}
+            />
+          </span>
+          <span className={styles.toggleLabel}>
+            {row.isActive ? "Active" : "Inactive"}
+          </span>
         </button>
       </div>
     ),

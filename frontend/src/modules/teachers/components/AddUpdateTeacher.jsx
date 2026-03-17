@@ -10,16 +10,29 @@ import { addTeacher, updateTeacher } from "../teachers.api";
 import toast from "react-hot-toast";
 import Button from "../../../components/Button";
 import { FormField, PasswordField } from "../../../components/FormField";
+import { useAuth } from "../../../app/authContext";
 import EyeOpen from "../../../assets/svg/EyeOpen";
 import EyeClosed from "../../../assets/svg/EyeClosed";
 import styles from "./AddUpdateTeacher.module.css";
 import modalStyles from "../../../components/Modal.module.css";
+
+const buildAutoPassword = (fullName) => {
+  const firstName = String(fullName || "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)[0];
+
+  if (!firstName) return "";
+  return `${firstName.toLowerCase()}@123`;
+};
 
 export default function AddUpdateTeacher({
   onClose,
   onSuccess,
   teacher = null,
 }) {
+  const { user } = useAuth();
+  const isAdmin = String(user?.role || "").toLowerCase() === "admin";
   const [showPassword, setShowPassword] = useState(false);
 
   // Set selected class and course when editing
@@ -29,6 +42,7 @@ export default function AddUpdateTeacher({
     formState: { errors },
     reset,
     setValue,
+    watch,
   } = useForm({
     resolver: yupResolver(teacher ? updateTeacherSchema : createTeacherSchema),
     defaultValues: teacher || {
@@ -69,12 +83,15 @@ export default function AddUpdateTeacher({
     name: "teacherProfile.experiences",
   });
 
+  const name = watch("name");
+
   useEffect(() => {
     if (teacher) {
       // Populate basic fields
       setValue("name", teacher.name || "");
       setValue("email", teacher.email || "");
       setValue("phone", teacher.phone || "");
+      setValue("password", "");
 
       // Populate teacher profile if exists
       if (teacher.teacherProfile) {
@@ -93,6 +110,12 @@ export default function AddUpdateTeacher({
       }
     }
   }, [teacher, setValue]);
+
+  useEffect(() => {
+    if (!teacher) {
+      setValue("password", buildAutoPassword(name));
+    }
+  }, [name, teacher, setValue]);
 
   const addMutation = useMutation({
     mutationFn: addTeacher,
@@ -117,6 +140,34 @@ export default function AddUpdateTeacher({
   const onSubmit = async (data) => {
     try {
       let payload = { ...data };
+
+      const qualifications =
+        payload.teacherProfile?.qualifications?.filter((item) => {
+          const degree = item?.degree?.trim();
+          const university = item?.university?.trim();
+          return Boolean(degree || university);
+        }) || [];
+
+      const experiences =
+        payload.teacherProfile?.experiences?.filter((item) => {
+          const title = item?.title?.trim();
+          const company = item?.company?.trim();
+          const hasStartYear =
+            item?.startYear !== "" && item?.startYear !== undefined;
+          const hasEndYear =
+            item?.endYear !== "" && item?.endYear !== undefined;
+          const hasYears = hasStartYear || hasEndYear;
+          return Boolean(title || company || hasYears || item?.isCurrent);
+        }) || [];
+
+      if (qualifications.length || experiences.length) {
+        payload.teacherProfile = {
+          ...(qualifications.length ? { qualifications } : {}),
+          ...(experiences.length ? { experiences } : {}),
+        };
+      } else {
+        delete payload.teacherProfile;
+      }
 
       const { parents, ...teacherData } = payload;
 
@@ -181,6 +232,7 @@ export default function AddUpdateTeacher({
                     type="email"
                     placeholder="Enter email"
                     required
+                    autoComplete={teacher ? "email" : "new-email"}
                   />
                 </div>
 
@@ -197,28 +249,31 @@ export default function AddUpdateTeacher({
                   />
                 </div>
 
-                {/* Password (only for new teachers) */}
-                {!teacher && (
+                {/* Password (new teacher required, edit teacher admin-only optional) */}
+                {(!teacher || isAdmin) && (
                   <div className="col-md-6">
                     <PasswordField
                       label="Password"
                       name="password"
                       control={control}
                       errors={errors}
-                      placeholder="Enter password"
+                      placeholder={
+                        teacher
+                          ? "Enter new password (optional)"
+                          : "Auto-generated from first name"
+                      }
                       showPassword={showPassword}
                       onTogglePassword={() => setShowPassword(!showPassword)}
                       PasswordIcon={showPassword ? <EyeOpen /> : <EyeClosed />}
-                      required
+                      required={!teacher}
+                      autoComplete="new-password"
                     />
                   </div>
                 )}
 
                 {/* Qualifications */}
                 <div className="col-12 mb-3">
-                  <label className={styles.selectLabel}>
-                    Qualifications <span className="text-danger">*</span>
-                  </label>
+                  <label className={styles.selectLabel}>Qualifications</label>
                   {qualificationFields.map((field, index) => (
                     <div key={field.id} className="card mb-3 p-3">
                       <div className="row">
@@ -229,7 +284,6 @@ export default function AddUpdateTeacher({
                             control={control}
                             errors={errors}
                             placeholder="e.g., B.Ed, M.Ed, PhD"
-                            required
                           />
                         </div>
                         <div className="col-md-6 mb-2">
@@ -239,7 +293,6 @@ export default function AddUpdateTeacher({
                             control={control}
                             errors={errors}
                             placeholder="University or Institute name"
-                            required
                           />
                         </div>
                         <div className="col-md-12 mb-2 d-flex justify-content-end align-items-end">
@@ -278,88 +331,104 @@ export default function AddUpdateTeacher({
 
                 {/* Experiences */}
                 <div className="col-12 mb-3">
-                  <label className={styles.selectLabel}>
-                    Experience <span className="text-danger">*</span>
-                  </label>
-                  {experienceFields.map((field, index) => (
-                    <div key={field.id} className="card mb-3 p-3">
-                      <div className="row">
-                        <div className="col-md-6 mb-2">
-                          <FormField
-                            label="Job Title"
-                            name={`teacherProfile.experiences.${index}.title`}
-                            control={control}
-                            errors={errors}
-                            placeholder="e.g., Senior Teacher, Principal"
-                            required
-                          />
-                        </div>
-                        <div className="col-md-6 mb-2">
-                          <FormField
-                            label="Company/Organization"
-                            name={`teacherProfile.experiences.${index}.company`}
-                            control={control}
-                            errors={errors}
-                            placeholder="Company or school name"
-                            required
-                          />
-                        </div>
-                        <div className="col-md-4 mb-2">
-                          <FormField
-                            label="Start Year"
-                            name={`teacherProfile.experiences.${index}.startYear`}
-                            control={control}
-                            errors={errors}
-                            type="number"
-                            placeholder="2020"
-                            min="1950"
-                            required
-                          />
-                        </div>
-                        <div className="col-md-4 mb-2">
-                          <FormField
-                            label="End Year"
-                            name={`teacherProfile.experiences.${index}.endYear`}
-                            control={control}
-                            errors={errors}
-                            type="number"
-                            placeholder="2024 or leave empty if current"
-                            min="1950"
-                          />
-                        </div>
-                        <div className="col-md-2 mb-2">
-                          <label className={styles.selectLabel}>Current</label>
-                          <Controller
-                            name={`teacherProfile.experiences.${index}.isCurrent`}
-                            control={control}
-                            render={({ field }) => (
-                              <div className="form-check">
-                                <input
-                                  {...field}
-                                  type="checkbox"
-                                  className="form-check-input"
-                                  checked={field.value}
-                                />
-                                <label className="form-check-label">Yes</label>
-                              </div>
+                  <label className={styles.selectLabel}>Experience</label>
+                  {experienceFields.map((field, index) => {
+                    const isCurrent = Boolean(
+                      watch(`teacherProfile.experiences.${index}.isCurrent`),
+                    );
+
+                    return (
+                      <div key={field.id} className="card mb-3 p-3">
+                        <div className="row">
+                          <div className="col-md-6 mb-2">
+                            <FormField
+                              label="Job Title"
+                              name={`teacherProfile.experiences.${index}.title`}
+                              control={control}
+                              errors={errors}
+                              placeholder="e.g., Senior Teacher, Principal"
+                            />
+                          </div>
+                          <div className="col-md-6 mb-2">
+                            <FormField
+                              label="Company/Organization"
+                              name={`teacherProfile.experiences.${index}.company`}
+                              control={control}
+                              errors={errors}
+                              placeholder="Company or school name"
+                            />
+                          </div>
+                          <div className="col-md-4 mb-2">
+                            <FormField
+                              label="Start Year"
+                              name={`teacherProfile.experiences.${index}.startYear`}
+                              control={control}
+                              errors={errors}
+                              type="number"
+                              placeholder="2020"
+                              min="1950"
+                            />
+                          </div>
+                          <div className="col-md-4 mb-2">
+                            <FormField
+                              label="End Year"
+                              name={`teacherProfile.experiences.${index}.endYear`}
+                              control={control}
+                              errors={errors}
+                              type="number"
+                              placeholder="2024 or leave empty if current"
+                              min="1950"
+                              disabled={isCurrent}
+                            />
+                          </div>
+                          <div className="col-md-2 mb-2">
+                            <label className={styles.selectLabel}>
+                              Current
+                            </label>
+                            <Controller
+                              name={`teacherProfile.experiences.${index}.isCurrent`}
+                              control={control}
+                              render={({ field: checkboxField }) => (
+                                <div className="form-check">
+                                  <input
+                                    {...checkboxField}
+                                    type="checkbox"
+                                    className="form-check-input"
+                                    checked={Boolean(checkboxField.value)}
+                                    onChange={(event) => {
+                                      const checked = event.target.checked;
+                                      checkboxField.onChange(checked);
+                                      if (checked) {
+                                        setValue(
+                                          `teacherProfile.experiences.${index}.endYear`,
+                                          "",
+                                        );
+                                      }
+                                    }}
+                                  />
+                                  <label className="form-check-label">
+                                    Yes
+                                  </label>
+                                </div>
+                              )}
+                            />
+                          </div>
+                          <div className="col-md-2 mb-2 d-flex align-items-end">
+                            {experienceFields.length > 1 && (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                className={styles.removeInlineButton}
+                                onClick={() => removeExperience(index)}
+                              >
+                                −
+                              </Button>
                             )}
-                          />
-                        </div>
-                        <div className="col-md-2 mb-2 d-flex align-items-end">
-                          {experienceFields.length > 1 && (
-                            <Button
-                              type="button"
-                              variant="outline"
-                              className={styles.removeInlineButton}
-                              onClick={() => removeExperience(index)}
-                            >
-                              −
-                            </Button>
-                          )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                   <Button
                     type="button"
                     variant="primary"

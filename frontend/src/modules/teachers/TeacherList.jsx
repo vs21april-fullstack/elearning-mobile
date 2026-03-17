@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchTeachers, fetchTeacherById, deleteTeacher } from "./teachers.api";
+import { fetchTeachers, fetchTeacherById, updateTeacher } from "./teachers.api";
 import { fetchCourses } from "../courses/courses.api";
 import { getTeacherColumns } from "./teachers.columns";
 import Select from "react-select";
@@ -8,8 +8,10 @@ import DataTable from "../../components/DataTable";
 import Spinner from "../../components/Spinner";
 import Pagination from "../../components/Pagination";
 import Button from "../../components/Button";
+import { useConfirm } from "../../app/confirmContext";
 import AddUpdateTeacher from "./components/AddUpdateTeacher";
 import ManageTeacherCourses from "./components/ManageTeacherCourses";
+import TeacherIcon from "../../assets/svg/TeacherIcon";
 import toast from "react-hot-toast";
 import styles from "./TeachersList.module.css";
 
@@ -20,8 +22,10 @@ export default function TeacherList() {
   const [assignTeacher, setAssignTeacher] = useState(null);
   const [page, setPage] = useState(1);
   const [filterCourses, setFilterCourses] = useState([]);
+  const [emailFilter, setEmailFilter] = useState("");
   const limit = 10;
   const queryClient = useQueryClient();
+  const confirm = useConfirm();
 
   const { data, isLoading } = useQuery({
     queryKey: ["teachers", page],
@@ -46,22 +50,37 @@ export default function TeacherList() {
 
   // Filter teachers by selected courses (client-side)
   const filteredTeachers = useMemo(() => {
-    if (!filterCourses.length) return teachers;
-    const ids = new Set(filterCourses.map((o) => o.value));
-    return teachers.filter((t) =>
-      (t.assignedCourses || []).some((c) => ids.has(String(c._id))),
-    );
-  }, [teachers, filterCourses]);
+    const normalizedEmail = emailFilter.trim().toLowerCase();
+    const courseIds = new Set(filterCourses.map((o) => o.value));
 
-  const deleteMutation = useMutation({
-    mutationFn: deleteTeacher,
+    return teachers.filter((teacher) => {
+      const matchesCourse =
+        !filterCourses.length ||
+        (teacher.assignedCourses || []).some((course) =>
+          courseIds.has(String(course._id)),
+        );
+
+      const matchesEmail =
+        !normalizedEmail ||
+        String(teacher.email || "")
+          .toLowerCase()
+          .includes(normalizedEmail);
+
+      return matchesCourse && matchesEmail;
+    });
+  }, [teachers, filterCourses, emailFilter]);
+
+  const toggleStatusMutation = useMutation({
+    mutationFn: ({ id, isActive }) =>
+      updateTeacher({ id, teacherData: { isActive } }),
     onSuccess: () => {
-      toast.success("Teacher deleted successfully!");
+      toast.success("Teacher status updated successfully!");
       queryClient.invalidateQueries(["teachers"]);
-      setPage(1); // Reset to first page after deletion
     },
     onError: (error) => {
-      toast.error(error.response?.data?.message || "Failed to delete teacher");
+      toast.error(
+        error.response?.data?.message || "Failed to update teacher status",
+      );
     },
   });
 
@@ -85,13 +104,25 @@ export default function TeacherList() {
     }
   }, []);
 
-  const handleDelete = useCallback(
+  const handleToggleStatus = useCallback(
     async (teacher) => {
-      if (window.confirm(`Are you sure you want to delete ${teacher.name}?`)) {
-        await deleteMutation.mutateAsync(teacher._id);
+      const confirmed = await confirm({
+        title: teacher.isActive ? "Set Teacher Inactive" : "Set Teacher Active",
+        message: teacher.isActive
+          ? `Are you sure you want to set ${teacher.name} as inactive?`
+          : `Are you sure you want to set ${teacher.name} as active?`,
+        confirmText: teacher.isActive ? "Set Inactive" : "Set Active",
+        confirmVariant: "danger",
+      });
+
+      if (confirmed) {
+        await toggleStatusMutation.mutateAsync({
+          id: teacher._id,
+          isActive: !teacher.isActive,
+        });
       }
     },
-    [deleteMutation],
+    [confirm, toggleStatusMutation],
   );
 
   const handleAssign = useCallback((teacher) => {
@@ -114,8 +145,8 @@ export default function TeacherList() {
   }, [queryClient]);
 
   const columns = useMemo(
-    () => getTeacherColumns(handleEdit, handleDelete, handleAssign),
-    [handleEdit, handleDelete, handleAssign],
+    () => getTeacherColumns(handleEdit, handleToggleStatus, handleAssign),
+    [handleEdit, handleToggleStatus, handleAssign],
   );
 
   return (
@@ -124,7 +155,10 @@ export default function TeacherList() {
         <div className="d-flex justify-content-between align-items-center">
           <div>
             <h2 className={`fw-bold mb-2 ${styles.heroTitle}`}>
-              👨‍🏫 Teachers Management
+              <span className="d-inline-flex align-items-center gap-2">
+                <TeacherIcon size={22} color="white" />
+                Teachers Management
+              </span>
             </h2>
             <p className={`mb-0 ${styles.heroSubtitle}`}>
               Manage and view all teacher information
@@ -138,6 +172,17 @@ export default function TeacherList() {
 
       {/* Course Filter */}
       <div className={`glass-card ${styles.filterBar}`}>
+        <div className={styles.filterGroup}>
+          <label className={styles.filterLabel}>Filter by Email</label>
+          <input
+            type="text"
+            value={emailFilter}
+            onChange={(event) => setEmailFilter(event.target.value)}
+            placeholder="Search by teacher email"
+            className={styles.filterSelect}
+          />
+        </div>
+
         <div className={styles.filterGroup}>
           <label className={styles.filterLabel}>Filter by Course</label>
           <Select
@@ -206,15 +251,18 @@ export default function TeacherList() {
             }}
           />
         </div>
-        {filterCourses.length > 0 && (
+        {(filterCourses.length > 0 || emailFilter.trim()) && (
           <button
             className={styles.clearButton}
-            onClick={() => setFilterCourses([])}
+            onClick={() => {
+              setFilterCourses([]);
+              setEmailFilter("");
+            }}
           >
             ✕ Clear
           </button>
         )}
-        {filterCourses.length > 0 && (
+        {(filterCourses.length > 0 || emailFilter.trim()) && (
           <span className={styles.recordsBadge}>
             {filteredTeachers.length} Teacher
             {filteredTeachers.length !== 1 ? "s" : ""}
@@ -244,16 +292,18 @@ export default function TeacherList() {
                     }
                   />
                 </div>
-                {pagination.totalPages > 1 && !filterCourses.length && (
-                  <Pagination
-                    currentPage={pagination.page}
-                    totalPages={pagination.totalPages}
-                    totalItems={pagination.total}
-                    itemsPerPage={limit}
-                    onPageChange={setPage}
-                    showInfo={true}
-                  />
-                )}
+                {pagination.totalPages > 1 &&
+                  !filterCourses.length &&
+                  !emailFilter.trim() && (
+                    <Pagination
+                      currentPage={pagination.page}
+                      totalPages={pagination.totalPages}
+                      totalItems={pagination.total}
+                      itemsPerPage={limit}
+                      onPageChange={setPage}
+                      showInfo={true}
+                    />
+                  )}
               </>
             )}
           </div>

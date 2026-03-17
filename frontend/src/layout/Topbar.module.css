@@ -1,11 +1,11 @@
 .topbar {
-  height: 80px;
+  min-height: clamp(68px, 8vh, 80px);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 24px 0 16px;
-  margin: 20px 20px 0;
-  border-radius: 20px;
+  padding: 0 20px 0 14px;
+  margin: 12px 12px 0;
+  border-radius: 16px;
   position: relative;
   z-index: 10;
   overflow: visible;
@@ -112,4 +112,48 @@
 
 .menuItemDanger:hover {
   background: rgba(239, 68, 68, 0.1);
+}
+
+@media (max-width: 991px) {
+  .topbar {
+    min-height: 72px;
+    padding: 0 12px;
+    margin: 0;
+    border-radius: 0;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+  }
+
+  .title {
+    font-size: 1.05rem;
+  }
+
+  .trigger {
+    gap: 8px;
+    padding: 8px 12px;
+  }
+
+  .userName {
+    max-width: 112px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+@media (max-width: 576px) {
+  .title {
+    font-size: 0.95rem;
+  }
+
+  .trigger {
+    padding: 8px 10px;
+  }
+
+  .userName {
+    display: none;
+  }
+
+  .menu {
+    width: min(88vw, 220px);
+  }
 }

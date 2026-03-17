@@ -10,16 +10,29 @@ import { addStudent, updateStudent } from "../students.api";
 import toast from "react-hot-toast";
 import Button from "../../../components/Button";
 import { FormField, PasswordField } from "../../../components/FormField";
+import { useAuth } from "../../../app/authContext";
 import styles from "./AddUpdateStudent.module.css";
 import modalStyles from "../../../components/Modal.module.css";
 import EyeOpen from "../../../assets/svg/EyeOpen";
 import EyeClosed from "../../../assets/svg/EyeClosed";
+
+const buildAutoPassword = (fullName) => {
+  const firstName = String(fullName || "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)[0];
+
+  if (!firstName) return "";
+  return `${firstName.toLowerCase()}@123`;
+};
 
 export default function AddUpdateStudent({
   onClose,
   onSuccess,
   student = null,
 }) {
+  const { user } = useAuth();
+  const isAdmin = String(user?.role || "").toLowerCase() === "admin";
   const [showPassword, setShowPassword] = useState(false);
 
   const {
@@ -28,21 +41,31 @@ export default function AddUpdateStudent({
     formState: { errors },
     reset,
     setValue,
+    watch,
   } = useForm({
     resolver: yupResolver(student ? updateStudentSchema : createStudentSchema),
   });
+
+  const name = watch("name");
 
   useEffect(() => {
     if (student) {
       setValue("name", student.name || "");
       setValue("email", student.email || "");
       setValue("phone", student.phone || "");
+      setValue("password", "");
       setValue("parents.father.name", student.parents?.father?.name || "");
       setValue("parents.father.phone", student.parents?.father?.phone || "");
       setValue("parents.mother.name", student.parents?.mother?.name || "");
       setValue("parents.mother.phone", student.parents?.mother?.phone || "");
     }
   }, [student, setValue]);
+
+  useEffect(() => {
+    if (!student) {
+      setValue("password", buildAutoPassword(name));
+    }
+  }, [name, student, setValue]);
 
   const addMutation = useMutation({
     mutationFn: addStudent,
@@ -129,6 +152,7 @@ export default function AddUpdateStudent({
                     type="email"
                     placeholder="Enter email"
                     required
+                    autoComplete="new-email"
                   />
                 </div>
 
@@ -144,18 +168,23 @@ export default function AddUpdateStudent({
                   />
                 </div>
 
-                {!student && (
+                {(!student || isAdmin) && (
                   <div className="col-md-6 mb-3">
                     <PasswordField
                       label="Password"
                       name="password"
                       control={control}
                       errors={errors}
-                      placeholder="Enter password"
+                      placeholder={
+                        student
+                          ? "Enter new password (optional)"
+                          : "Auto-generated from first name"
+                      }
                       showPassword={showPassword}
                       onTogglePassword={() => setShowPassword(!showPassword)}
                       PasswordIcon={showPassword ? <EyeOpen /> : <EyeClosed />}
-                      required
+                      required={!student}
+                      autoComplete="new-password"
                     />
                   </div>
                 )}

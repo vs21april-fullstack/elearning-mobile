@@ -2,21 +2,38 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../app/authContext";
+import { useConfirm } from "../app/confirmContext";
 import { fetchProfile } from "../modules/profile/profile.api";
 import UserIcon from "../assets/svg/UserIcon";
 import LogoutIcon from "../assets/svg/LogoutIcon";
 import HamburgerIcon from "../assets/svg/HamburgerIcon";
 import styles from "./Topbar.module.css";
 
-export default function Topbar({ isCollapsed, toggleSidebar }) {
+export default function Topbar({ isCollapsed, toggleSidebar, isMobile }) {
   const { logout, user } = useAuth();
+  const confirm = useConfirm();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef(null);
 
+  const profileQueryKey = ["profile", user?.id || user?.token || "anonymous"];
+
+  const handleLogoutClick = async () => {
+    const confirmed = await confirm({
+      title: "Confirm Logout",
+      message: "Are you sure you want to logout?",
+      confirmText: "Logout",
+      confirmVariant: "danger",
+    });
+    if (!confirmed) return;
+    setOpen(false);
+    await logout();
+  };
+
   const { data: profile } = useQuery({
-    queryKey: ["profile"],
+    queryKey: profileQueryKey,
     queryFn: fetchProfile,
+    enabled: !!user?.token,
     staleTime: 5 * 60 * 1000,
   });
 
@@ -51,7 +68,14 @@ export default function Topbar({ isCollapsed, toggleSidebar }) {
         <button
           onClick={toggleSidebar}
           className={styles.hamburgerButton}
-          title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+          title={
+            isMobile
+              ? "Open navigation"
+              : isCollapsed
+                ? "Expand Sidebar"
+                : "Collapse Sidebar"
+          }
+          aria-label={isMobile ? "Open navigation" : "Toggle sidebar"}
         >
           <HamburgerIcon size={18} color="#2f7d57" />
         </button>
@@ -77,7 +101,7 @@ export default function Topbar({ isCollapsed, toggleSidebar }) {
             </div>
 
             <div
-              onClick={logout}
+              onClick={handleLogoutClick}
               className={`${styles.menuItem} ${styles.menuItemDanger}`}
             >
               <LogoutIcon size={18} color="#ef4444" /> Logout

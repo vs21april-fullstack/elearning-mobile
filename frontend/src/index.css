@@ -40,6 +40,13 @@
   --text-secondary: #64748b;
   --text-light: #94a3b8;
 
+  /* Responsive breakpoints and spacing */
+  --bp-mobile: 576px;
+  --bp-tablet: 768px;
+  --bp-laptop: 1024px;
+  --bp-desktop: 1280px;
+  --space-page: clamp(14px, 2.4vw, 32px);
+
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -145,7 +152,7 @@ body {
 
 div#root {
   width: 100%;
-  min-height: 100vh;
+  min-height: 100dvh;
 }
 
 a {
@@ -303,4 +310,29 @@ textarea.form-control {
   padding: 0.35rem 0.8rem;
   border-radius: 8px;
   font-weight: 500;
+}
+
+@media (max-width: 991px) {
+  .container,
+  .container-fluid {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .btn {
+    padding: 0.55rem 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .form-control,
+  .form-select,
+  .form-control-file {
+    padding: 10px 12px;
+    font-size: 0.92rem;
+  }
+
+  .table {
+    font-size: 0.9rem;
+  }
 }

@@ -8,6 +8,7 @@
 
 .tableContainer {
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .table {
@@ -95,4 +96,32 @@
 
 .deleteButton:hover {
   background: #bb2d3b;
+}
+
+@media (max-width: 991px) {
+  .table {
+    min-width: 720px;
+  }
+
+  .th,
+  .td {
+    padding: 12px;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .table {
+    min-width: 640px;
+  }
+
+  .th,
+  .td {
+    padding: 10px;
+    font-size: 0.85rem;
+  }
+
+  .actionCell {
+    gap: 6px;
+  }
 }

@@ -37,10 +37,11 @@ export const addTeacher = async (teacherData) => {
 
 export const updateTeacher = async ({ id, teacherData }) => {
     const payload = {
-        name: teacherData.name,
-        email: teacherData.email,
-        phone: teacherData.phone,
-        teacherProfile: teacherData.teacherProfile,
+        ...(teacherData.name !== undefined ? { name: teacherData.name } : {}),
+        ...(teacherData.email !== undefined ? { email: teacherData.email } : {}),
+        ...(teacherData.phone !== undefined ? { phone: teacherData.phone } : {}),
+        ...(teacherData.teacherProfile !== undefined ? { teacherProfile: teacherData.teacherProfile } : {}),
+        ...(teacherData.isActive !== undefined ? { isActive: teacherData.isActive } : {}),
     }
 
     if (teacherData.password) {

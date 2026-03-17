@@ -8,41 +8,56 @@ export const createTeacherSchema = yup.object({
     teacherProfile: yup.object({
         qualifications: yup.array().of(
             yup.object({
-                degree: yup.string().required('Degree is required'),
-                university: yup.string().required('University/Institute is required')
+                degree: yup.string().trim().notRequired(),
+                university: yup.string().trim().notRequired()
             })
-        ).min(1, 'At least one qualification is required').required(),
+        ).notRequired(),
         experiences: yup.array().of(
             yup.object({
-                title: yup.string().required('Job title is required'),
-                company: yup.string().required('Company/Organization is required'),
-                startYear: yup.number().required('Start year is required').min(1950, 'Invalid year'),
-                endYear: yup.number().min(1950, 'Invalid year').nullable(),
-                isCurrent: yup.boolean()
+                title: yup.string().trim().notRequired(),
+                company: yup.string().trim().notRequired(),
+                startYear: yup.number()
+                    .transform((value, originalValue) => (originalValue === '' ? undefined : value))
+                    .notRequired()
+                    .min(1950, 'Invalid year'),
+                endYear: yup.number()
+                    .transform((value, originalValue) => (originalValue === '' ? undefined : value))
+                    .notRequired()
+                    .min(1950, 'Invalid year')
+                    .nullable(),
+                isCurrent: yup.boolean().notRequired()
             })
-        ).min(1, 'At least one experience is required').required()
-    }).required()
+        ).notRequired()
+    }).notRequired()
 })
 
 export const updateTeacherSchema = yup.object({
     name: yup.string().required('Name is required'),
     phone: yup.string().required('Phone is required'),
     email: yup.string().email('Invalid email').required('Email is required'),
+    password: yup.string().min(6, 'Password must be at least 6 characters').notRequired(),
     teacherProfile: yup.object({
         qualifications: yup.array().of(
             yup.object({
-                degree: yup.string().required('Degree is required'),
-                university: yup.string().required('University/Institute is required')
+                degree: yup.string().trim().notRequired(),
+                university: yup.string().trim().notRequired()
             })
-        ).min(1, 'At least one qualification is required').required(),
+        ).notRequired(),
         experiences: yup.array().of(
             yup.object({
-                title: yup.string().required('Job title is required'),
-                company: yup.string().required('Company/Organization is required'),
-                startYear: yup.number().required('Start year is required').min(1950, 'Invalid year'),
-                endYear: yup.number().min(1950, 'Invalid year').nullable(),
-                isCurrent: yup.boolean()
+                title: yup.string().trim().notRequired(),
+                company: yup.string().trim().notRequired(),
+                startYear: yup.number()
+                    .transform((value, originalValue) => (originalValue === '' ? undefined : value))
+                    .notRequired()
+                    .min(1950, 'Invalid year'),
+                endYear: yup.number()
+                    .transform((value, originalValue) => (originalValue === '' ? undefined : value))
+                    .notRequired()
+                    .min(1950, 'Invalid year')
+                    .nullable(),
+                isCurrent: yup.boolean().notRequired()
             })
-        ).min(1, 'At least one experience is required').required()
-    }).required()
+        ).notRequired()
+    }).notRequired()
 })

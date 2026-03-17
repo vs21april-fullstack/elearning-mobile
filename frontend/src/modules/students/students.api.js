@@ -81,9 +81,10 @@ export const addStudent = async (studentData) => {
 
 export const updateStudent = async ({ id, studentData }) => {
     const payload = {
-        name: studentData.name,
-        email: studentData.email,
-        phone: studentData.phone
+        ...(studentData.name !== undefined ? { name: studentData.name } : {}),
+        ...(studentData.email !== undefined ? { email: studentData.email } : {}),
+        ...(studentData.phone !== undefined ? { phone: studentData.phone } : {}),
+        ...(studentData.isActive !== undefined ? { isActive: studentData.isActive } : {})
     }
 
     const normalizedParents = normalizeParentDetails(studentData.parents)

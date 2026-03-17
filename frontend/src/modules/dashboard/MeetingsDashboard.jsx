@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../app/authContext";
+import { openNativePicker } from "../../utils/openNativePicker";
 import {
   fetchMeetingsForStudent,
   fetchMeetingsForTeacher,
@@ -9,6 +10,7 @@ import {
 import Spinner from "../../components/Spinner";
 import Button from "../../components/Button";
 import Pagination from "../../components/Pagination";
+import MeetingIcon from "../../assets/svg/MeetingIcon";
 import styles from "./MeetingsDashboard.module.css";
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -336,7 +338,10 @@ export default function MeetingsDashboard() {
           <div className={styles.sectionHeader}>
             <div className={styles.sectionHeadingGroup}>
               <h4 className={styles.sectionTitle}>
-                <span>📅 Meetings</span>
+                <span className="d-inline-flex align-items-center gap-2">
+                  <MeetingIcon size={18} />
+                  Meetings
+                </span>
                 <span className={styles.badge}>{activeMeetingsCount}</span>
               </h4>
 
@@ -396,6 +401,7 @@ export default function MeetingsDashboard() {
                     type="date"
                     value={selectedDate}
                     onChange={(e) => setSelectedDate(e.target.value)}
+                    onMouseDown={openNativePicker}
                     className={styles.filterInput}
                   />
                   {selectedDate && (
@@ -439,9 +445,7 @@ export default function MeetingsDashboard() {
                       <span
                         className={`${styles.timeLabel} ${isToday ? styles.todayLabel : ""}`}
                       >
-                        {isToday
-                          ? "🔔 Today"
-                          : meetingDate.toLocaleDateString()}{" "}
+                        {isToday ? "Today" : meetingDate.toLocaleDateString()}{" "}
                         at {meeting.startTime} - {meeting.endTime}
                       </span>
                     </div>
@@ -459,7 +463,7 @@ export default function MeetingsDashboard() {
                       {activeTab === "past"
                         ? "Completed"
                         : canJoinNow
-                          ? "📞 Join"
+                          ? "Join"
                           : "Starts Soon"}
                     </Button>
                   </div>

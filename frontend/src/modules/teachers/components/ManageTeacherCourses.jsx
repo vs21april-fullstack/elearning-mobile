@@ -170,10 +170,11 @@ export default function ManageTeacherCourses({ teacher, onClose, onSuccess }) {
                     styles={selectStyles}
                   />
                 </div>
-                <div className="col-md-3">
+                <div className="col-md-3 col-12 mt-3 mt-md-0 d-grid">
                   <Button
                     type="button"
                     variant="primary"
+                    className="w-100"
                     onClick={handleAdd}
                     disabled={!selectedCourse}
                   >

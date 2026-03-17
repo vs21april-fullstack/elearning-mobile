@@ -4,9 +4,7 @@ import { PASSWORD_MIN_LENGTH } from '../../utils/constants.js';
 export const updateProfileSchema = yup.object({
     name: yup.string().trim().min(2, 'Name must be at least 2 characters'),
     email: yup.string().email('Invalid email format'),
-    phone: yup.string()
-        .matches(/^[0-9]{10}$/, 'Phone must be 10 digits')
-        .optional(),
+    phone: yup.string().optional(),
     parents: yup.object({
         father: yup.object({
             name: yup.string().nullable(),

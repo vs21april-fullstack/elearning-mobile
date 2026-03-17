@@ -35,20 +35,32 @@ export const createTeacherSchema = yup.object({
   teacherProfile: yup.object({
     qualifications: yup.array().of(
       yup.object({
-        degree: yup.string().required(),
-        university: yup.string().required()
+        degree: yup.string().trim(),
+        university: yup.string().trim()
       })
-    ).required(),
+    ),
     experiences: yup.array().of(
       yup.object({
-        title: yup.string().required(),
-        company: yup.string().required(),
-        startYear: yup.number().required(),
-        endYear: yup.number().nullable(),
+        title: yup.string().trim(),
+        company: yup.string().trim(),
+        startYear: yup.number()
+          .transform((value, originalValue) =>
+            originalValue === '' || originalValue == null ? undefined : value
+          )
+          .nullable(),
+        endYear: yup.number()
+          .transform((value, originalValue) =>
+            originalValue === '' || originalValue == null ? undefined : value
+          )
+          .when('isCurrent', {
+            is: true,
+            then: (schema) => schema.nullable().notRequired(),
+            otherwise: (schema) => schema.nullable().notRequired()
+          }),
         isCurrent: yup.boolean()
       })
-    ).required()
-  }).required()
+    )
+  }).notRequired()
 })
 
 export const updateUserSchema = yup.object({
@@ -69,8 +81,20 @@ export const updateUserSchema = yup.object({
       yup.object({
         title: yup.string(),
         company: yup.string(),
-        startYear: yup.number(),
-        endYear: yup.number().nullable(),
+        startYear: yup.number()
+          .transform((value, originalValue) =>
+            originalValue === '' || originalValue == null ? undefined : value
+          )
+          .nullable(),
+        endYear: yup.number()
+          .transform((value, originalValue) =>
+            originalValue === '' || originalValue == null ? undefined : value
+          )
+          .when('isCurrent', {
+            is: true,
+            then: (schema) => schema.nullable().notRequired(),
+            otherwise: (schema) => schema.nullable().notRequired()
+          }),
         isCurrent: yup.boolean()
       })
     )

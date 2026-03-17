@@ -24,3 +24,35 @@
   border-radius: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
+
+@media (max-width: 991px) {
+  .container {
+    padding: 22px;
+    min-height: calc(100dvh - 72px);
+  }
+
+  .statsGrid {
+    gap: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 14px;
+  }
+
+  .loadingContainer {
+    min-height: calc(100dvh - 120px);
+  }
+
+  .statsGrid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .chartSection {
+    padding: 14px;
+    border-radius: 12px;
+  }
+}

@@ -6,7 +6,9 @@ import DataTable from "../../components/DataTable";
 import Spinner from "../../components/Spinner";
 import Pagination from "../../components/Pagination";
 import Button from "../../components/Button";
+import { useConfirm } from "../../app/confirmContext";
 import AddUpdateCourse from "./components/AddUpdateCourse";
+import CourseIcon from "../../assets/svg/CourseIcon";
 import toast from "react-hot-toast";
 import styles from "./CoursesList.module.css";
 
@@ -16,6 +18,7 @@ export default function CourseList() {
   const [page, setPage] = useState(1);
   const limit = 10;
   const queryClient = useQueryClient();
+  const confirm = useConfirm();
 
   const { data, isLoading } = useQuery({
     queryKey: ["courses", page],
@@ -60,13 +63,18 @@ export default function CourseList() {
 
   const handleDelete = useCallback(
     async (courseData) => {
-      if (
-        window.confirm(`Are you sure you want to delete ${courseData.title}?`)
-      ) {
+      const confirmed = await confirm({
+        title: "Delete Course",
+        message: `Are you sure you want to delete ${courseData.title}?`,
+        confirmText: "Delete",
+        confirmVariant: "danger",
+      });
+
+      if (confirmed) {
         await deleteMutation.mutateAsync(courseData._id);
       }
     },
-    [deleteMutation],
+    [confirm, deleteMutation],
   );
 
   const handleModalClose = useCallback(() => {
@@ -89,7 +97,10 @@ export default function CourseList() {
         <div className="d-flex justify-content-between align-items-center">
           <div>
             <h2 className={`fw-bold mb-2 ${styles.heroTitle}`}>
-              📚 Courses Management
+              <span className="d-inline-flex align-items-center gap-2">
+                <CourseIcon size={22} color="white" />
+                Courses Management
+              </span>
             </h2>
             <p className={`mb-0 ${styles.heroSubtitle}`}>
               Manage courses, assign teachers, and track curriculum

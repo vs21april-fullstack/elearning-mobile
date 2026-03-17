@@ -3,14 +3,14 @@ import * as yup from 'yup'
 export const createCourseSchema = yup.object({
     title: yup.string().required('Title is required'),
     description: yup.string(),
-    thumbnail: yup.string()
+    thumbnail: yup.string().nullable().optional(),
 })
 
 export const updateCourseSchema = yup.object({
     title: yup.string(),
     description: yup.string(),
     teacher: yup.string(),
-    thumbnail: yup.string(),
+    thumbnail: yup.string().nullable().optional(),
     isActive: yup.boolean()
 })
 

@@ -8,6 +8,7 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchProfile, updateProfile, changePassword } from "./profile.api";
+import { useAuth } from "../../app/authContext";
 import {
   updateProfileSchema,
   changePasswordSchema,
@@ -101,17 +102,20 @@ const normalizeTeacherProfile = (teacherProfile) => {
 };
 
 export default function Profile() {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("profile");
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const queryClient = useQueryClient();
+  const profileQueryKey = ["profile", user?.id || user?.token || "anonymous"];
 
   // Fetch profile data
   const { data: profile, isLoading } = useQuery({
-    queryKey: ["profile"],
+    queryKey: profileQueryKey,
     queryFn: fetchProfile,
+    enabled: !!user?.token,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
@@ -178,7 +182,7 @@ export default function Profile() {
   const updateProfileMutation = useMutation({
     mutationFn: updateProfile,
     onSuccess: (data) => {
-      queryClient.setQueryData(["profile"], data);
+      queryClient.setQueryData(profileQueryKey, data);
       toastSuccess("Profile updated successfully!");
     },
     onError: (error) => {
@@ -304,6 +308,7 @@ export default function Profile() {
                       errors={profileForm.formState.errors}
                       type="email"
                       placeholder="Enter your email"
+                      readOnly
                     />
                   </div>
 
@@ -604,6 +609,7 @@ export default function Profile() {
                     showCurrentPassword ? <EyeOpen /> : <EyeClosed />
                   }
                   required
+                  autoComplete="current-password"
                 />
 
                 {/* New Password */}
@@ -617,6 +623,7 @@ export default function Profile() {
                   onTogglePassword={() => setShowNewPassword(!showNewPassword)}
                   PasswordIcon={showNewPassword ? <EyeOpen /> : <EyeClosed />}
                   required
+                  autoComplete="new-password"
                 />
 
                 {/* Confirm Password */}
@@ -634,6 +641,7 @@ export default function Profile() {
                     showConfirmPassword ? <EyeOpen /> : <EyeClosed />
                   }
                   required
+                  autoComplete="new-password"
                 />
 
                 {/* Submit Button */}

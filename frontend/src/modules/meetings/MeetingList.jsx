@@ -9,12 +9,15 @@ import Pagination from "../../components/Pagination";
 import AddUpdateMeeting from "./components/AddUpdateMeeting";
 import Button from "../../components/Button";
 import { useAuth } from "../../app/authContext";
+import { useConfirm } from "../../app/confirmContext";
+import MeetingIcon from "../../assets/svg/MeetingIcon";
 import toast from "react-hot-toast";
 import styles from "./MeetingList.module.css";
 
 export default function MeetingList() {
   const { user } = useAuth();
-  const isTeacher = user?.role === "teacher";
+  const confirm = useConfirm();
+  const canManageMeetings = user?.role === "teacher" || user?.role === "admin";
   const navigate = useNavigate();
   const [showForm, setShowForm] = useState(false);
   const [selectedMeeting, setSelectedMeeting] = useState(null);
@@ -57,16 +60,19 @@ export default function MeetingList() {
   }, []);
 
   const handleDelete = useCallback(
-    (meeting) => {
-      if (
-        window.confirm(
-          `Are you sure you want to delete this meeting: ${meeting.title}?`,
-        )
-      ) {
+    async (meeting) => {
+      const confirmed = await confirm({
+        title: "Delete Meeting",
+        message: `Are you sure you want to delete this meeting: ${meeting.title}?`,
+        confirmText: "Delete",
+        confirmVariant: "danger",
+      });
+
+      if (confirmed) {
         deleteMutation.mutate(meeting._id);
       }
     },
-    [deleteMutation],
+    [confirm, deleteMutation],
   );
 
   const handleCopyLink = useCallback((meeting) => {
@@ -87,7 +93,13 @@ export default function MeetingList() {
 
   const columns = useMemo(
     () =>
-      getMeetingColumns(handleEdit, handleDelete, handleCopyLink, handleJoin),
+      getMeetingColumns(
+        handleEdit,
+        handleDelete,
+        handleCopyLink,
+        handleJoin,
+        user?.role,
+      ),
     [handleEdit, handleDelete, handleCopyLink, handleJoin],
   );
 
@@ -111,13 +123,16 @@ export default function MeetingList() {
         <div className="d-flex justify-content-between align-items-center">
           <div>
             <h2 className={`fw-bold mb-2 ${styles.heroTitle}`}>
-              📅 Meetings Management
+              <span className="d-inline-flex align-items-center gap-2">
+                <MeetingIcon size={22} color="white" />
+                Meetings Management
+              </span>
             </h2>
             <p className={`mb-0 ${styles.heroSubtitle}`}>
               Schedule and manage online meetings
             </p>
           </div>
-          {isTeacher && (
+          {canManageMeetings && (
             <Button variant="primary" onClick={handleAddNew}>
               <i className="bi bi-plus-lg"></i> Schedule New Meeting
             </Button>

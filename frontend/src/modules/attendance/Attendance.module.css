@@ -1,5 +1,18 @@
 /* Attendance Component Styles */
 
+.container {
+  min-height: 100vh;
+}
+
+.heroBanner {
+  background: linear-gradient(135deg, #2f7d57 0%, #1e5f42 100%);
+  border-radius: 20px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  color: white;
+  box-shadow: 0 10px 40px rgba(47, 125, 87, 0.3);
+}
+
 /* ── Page Header ─────────────────────────────── */
 .pageHeader {
   display: flex;
@@ -11,15 +24,16 @@
 }
 
 .pageTitle {
-  font-size: 1.5rem;
+  font-size: 2rem;
   font-weight: 700;
-  color: #1e293b;
-  margin: 0 0 4px;
+  color: #fff;
+  margin: 0 0 8px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.12);
 }
 
 .pageSubtext {
-  font-size: 0.88rem;
-  color: #64748b;
+  font-size: 1.05rem;
+  color: rgba(255, 255, 255, 0.9);
   margin: 0;
 }
 
@@ -27,12 +41,12 @@
   display: inline-flex;
   align-items: center;
   padding: 6px 14px;
-  background: rgba(47, 125, 87, 0.1);
-  border: 1px solid rgba(47, 125, 87, 0.25);
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.4);
   border-radius: 20px;
-  font-size: 0.82rem;
+  font-size: 0.85rem;
   font-weight: 600;
-  color: #2f7d57;
+  color: #fff;
 }
 
 /* ── Filter Bar ──────────────────────────────── */
@@ -122,4 +136,47 @@
   background-color: white;
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 768px) {
+  .heroBanner {
+    padding: 18px 16px;
+    border-radius: 16px;
+    margin-bottom: 16px;
+  }
+
+  .pageHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .pageTitle {
+    font-size: 1.3rem;
+  }
+
+  .pageSubtext {
+    font-size: 0.88rem;
+  }
+
+  .recordsBadge {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .filterBar {
+    padding: 12px;
+    border-radius: 12px;
+    gap: 12px;
+  }
+
+  .filterGroup {
+    min-width: 100%;
+  }
+
+  .clearButton {
+    width: 100%;
+    align-self: stretch;
+    justify-content: center;
+  }
 }

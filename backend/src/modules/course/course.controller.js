@@ -2,13 +2,26 @@ import UserClass from '../user/userClass.model.js'
 import UserCourse from '../user/userCourse.model.js'
 import Course from './course.model.js'
 import { success, successWithPagination } from '../../utils/response.js'
-import { NotFoundError } from '../../utils/customErrors.js'
+import { ConflictError, NotFoundError } from '../../utils/customErrors.js'
 import { PAGINATION } from '../../utils/constants.js'
 import { logger } from '../../utils/logger.js'
 
 // Course Controllers
 export const createCourse = async (req, reply) => {
-    const course = await Course.create(req.body)
+    const title = req.body?.title?.trim()
+
+    const existingCourse = await Course.findOne({ title, isActive: true })
+        .collation({ locale: 'en', strength: 2 })
+        .select('_id title')
+
+    if (existingCourse) {
+        throw new ConflictError('Course with this name already exists')
+    }
+
+    const course = await Course.create({
+        ...req.body,
+        title
+    })
     const data = await Course.findById(course._id)
         .populate('teachers', 'name email')
     logger.info(`Course created: ${data._id}`)
@@ -25,7 +38,7 @@ export const getCourses = async (req, reply) => {
             .populate('teachers', 'name email')
             .skip(skip)
             .limit(limit)
-            .sort('-createdAt'),
+            .sort({ title: 1, createdAt: -1 }),
         Course.countDocuments({ isActive: true })
     ])
 
@@ -42,9 +55,29 @@ export const getCourseById = async (req, reply) => {
 }
 
 export const updateCourse = async (req, reply) => {
+    const updatePayload = { ...req.body }
+
+    if (typeof req.body?.title === 'string') {
+        const title = req.body.title.trim()
+
+        const duplicateCourse = await Course.findOne({
+            _id: { $ne: req.params.id },
+            title,
+            isActive: true
+        })
+            .collation({ locale: 'en', strength: 2 })
+            .select('_id title')
+
+        if (duplicateCourse) {
+            throw new ConflictError('Course with this name already exists')
+        }
+
+        updatePayload.title = title
+    }
+
     const data = await Course.findByIdAndUpdate(
         req.params.id,
-        req.body,
+        updatePayload,
         { new: true, runValidators: true }
     )
         .populate('teachers', 'name email')

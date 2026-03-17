@@ -2,8 +2,8 @@
  * Student List Table Columns Configuration
  */
 
+import CourseIcon from "../../assets/svg/CourseIcon";
 import EditIcon from "../../assets/svg/EditIcon";
-import DeleteIcon from "../../assets/svg/DeleteIcon";
 import styles from "../../styles/Columns.module.css";
 
 function CoursePills({ courses }) {
@@ -34,7 +34,7 @@ function CoursePills({ courses }) {
 
 export const getStudentColumns = (
   handleEdit,
-  handleDelete,
+  handleToggleActive,
   handleManageCourses,
 ) => [
   {
@@ -62,6 +62,19 @@ export const getStudentColumns = (
     cell: (row) => row.parents?.father?.phone || "-",
   },
   {
+    header: "Status",
+    accessor: "isActive",
+    cell: (row) => (
+      <span
+        className={`${styles.statusBadge} ${
+          row.isActive ? styles.statusPresent : styles.statusAbsent
+        }`}
+      >
+        {row.isActive ? "Active" : "Inactive"}
+      </span>
+    ),
+  },
+  {
     header: "Enrolled Courses",
     accessor: "enrolledCourses",
     cell: (row) => <CoursePills courses={row.enrolledCourses || []} />,
@@ -82,13 +95,30 @@ export const getStudentColumns = (
           className={`${styles.actionButton} ${styles.buttonInfo}`}
           title="Manage Courses"
         >
-          📚 Courses
+          <CourseIcon size={16} color="white" /> Courses
         </button>
         <button
-          onClick={() => handleDelete(row)}
-          className={`${styles.actionButton} ${styles.buttonDelete}`}
+          onClick={() => handleToggleActive(row)}
+          className={styles.toggleButton}
+          aria-pressed={row.isActive}
+          title={row.isActive ? "Set Inactive" : "Set Active"}
         >
-          <DeleteIcon size={16} color="white" /> Delete
+          <span
+            className={`${styles.toggleTrack} ${
+              row.isActive
+                ? styles.toggleTrackActive
+                : styles.toggleTrackInactive
+            }`}
+          >
+            <span
+              className={`${styles.toggleThumb} ${
+                row.isActive ? styles.toggleThumbActive : ""
+              }`}
+            />
+          </span>
+          <span className={styles.toggleLabel}>
+            {row.isActive ? "Active" : "Inactive"}
+          </span>
         </button>
       </div>
     ),

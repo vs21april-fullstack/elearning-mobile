@@ -23,6 +23,7 @@ export const updateStudentSchema = yup.object({
     name: yup.string().required('Name is required'),
     email: yup.string().email('Enter valid email').required('Email is required'),
     phone: yup.string().required('Phone is required'),
+    password: yup.string().min(6, 'Minimum 6 characters').notRequired(),
 
     parents: yup.object({
         father: yup.object({

@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { fetchStudents, fetchStudentById, deleteStudent } from "./students.api";
+import { fetchStudents, fetchStudentById, updateStudent } from "./students.api";
 import { fetchCourses } from "../courses/courses.api";
 import { getStudentColumns } from "./students.columns";
 import Select from "react-select";
@@ -10,6 +10,8 @@ import Pagination from "../../components/Pagination";
 import AddUpdateStudent from "./components/AddUpdateStudent";
 import ManageCourses from "./components/ManageCourses";
 import Button from "../../components/Button";
+import { useConfirm } from "../../app/confirmContext";
+import StudentIcon from "../../assets/svg/StudentIcon";
 import toast from "react-hot-toast";
 import styles from "./StudentList.module.css";
 
@@ -20,7 +22,9 @@ export default function StudentList() {
   const [studentForCourses, setStudentForCourses] = useState(null);
   const [page, setPage] = useState(1);
   const [filterCourses, setFilterCourses] = useState([]);
+  const [selectedTeacherId, setSelectedTeacherId] = useState("");
   const limit = 10;
+  const confirm = useConfirm();
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["students", page],
@@ -41,25 +45,87 @@ export default function StudentList() {
     [allCoursesData],
   );
 
-  // enrolledCourses is embedded directly on each student by the list API
+  const teacherOptions = useMemo(() => {
+    const unique = new Map();
+
+    allCourses.forEach((course) => {
+      const teachers = [
+        ...(course?.teacher ? [course.teacher] : []),
+        ...(Array.isArray(course?.teachers) ? course.teachers : []),
+      ];
+
+      teachers.forEach((teacher) => {
+        const id = String(teacher?._id || teacher || "");
+        if (!id || unique.has(id)) return;
+        unique.set(id, {
+          value: id,
+          label: teacher?.email
+            ? `${teacher?.name || "Teacher"} (${teacher.email})`
+            : teacher?.name || "Teacher",
+        });
+      });
+    });
+
+    return Array.from(unique.values()).sort((a, b) =>
+      a.label.localeCompare(b.label),
+    );
+  }, [allCourses]);
+
+  const selectedTeacherCourseIds = useMemo(() => {
+    if (!selectedTeacherId) return new Set();
+
+    const ids = new Set();
+    allCourses.forEach((course) => {
+      const teachers = [
+        ...(course?.teacher ? [course.teacher] : []),
+        ...(Array.isArray(course?.teachers) ? course.teachers : []),
+      ];
+
+      const hasTeacher = teachers.some((teacher) => {
+        const id = String(teacher?._id || teacher || "");
+        return id === selectedTeacherId;
+      });
+
+      if (hasTeacher) {
+        ids.add(String(course._id));
+      }
+    });
+
+    return ids;
+  }, [allCourses, selectedTeacherId]);
 
   // Filter students by selected courses (client-side on current page)
   const filteredStudents = useMemo(() => {
-    if (!filterCourses.length) return students;
-    const ids = new Set(filterCourses.map((o) => o.value));
-    return students.filter((s) =>
-      (s.enrolledCourses || []).some((c) => ids.has(String(c._id))),
-    );
-  }, [students, filterCourses]);
+    const courseIds = new Set(filterCourses.map((o) => o.value));
 
-  const deleteMutation = useMutation({
-    mutationFn: deleteStudent,
+    return students.filter((student) => {
+      const enrolledIds = (student.enrolledCourses || []).map((course) =>
+        String(course._id),
+      );
+
+      const matchesCourse =
+        !filterCourses.length ||
+        enrolledIds.some((courseId) => courseIds.has(courseId));
+
+      const matchesTeacher =
+        !selectedTeacherId ||
+        enrolledIds.some((courseId) => selectedTeacherCourseIds.has(courseId));
+
+      return matchesCourse && matchesTeacher;
+    });
+  }, [students, filterCourses, selectedTeacherId, selectedTeacherCourseIds]);
+
+  const toggleStatusMutation = useMutation({
+    mutationFn: ({ id, isActive }) =>
+      updateStudent({ id, studentData: { isActive } }),
     onSuccess: () => {
-      toast.success("Student deleted successfully!");
+      toast.success("Student status updated successfully!");
       refetch();
     },
     onError: (error) => {
-      toast.error(error.response?.data?.message || "Failed to delete student");
+      toast.error(
+        error.response?.data?.message || "Failed to update student status",
+      );
     },
   });
 
@@ -78,17 +144,25 @@ export default function StudentList() {
     }
   }, []);
 
-  const handleDelete = useCallback(
-    (student) => {
-      if (
-        window.confirm(
-          `Are you sure you want to delete ${student.name}? This action cannot be undone.`,
-        )
-      ) {
-        deleteMutation.mutate(student._id);
+  const handleToggleStatus = useCallback(
+    async (student) => {
+      const confirmed = await confirm({
+        title: student.isActive ? "Set Student Inactive" : "Set Student Active",
+        message: student.isActive
+          ? `Are you sure you want to set ${student.name} as inactive?`
+          : `Are you sure you want to set ${student.name} as active?`,
+        confirmText: student.isActive ? "Set Inactive" : "Set Active",
+        confirmVariant: "danger",
+      });
+
+      if (confirmed) {
+        toggleStatusMutation.mutate({
+          id: student._id,
+          isActive: !student.isActive,
+        });
       }
     },
-    [deleteMutation],
+    [confirm, toggleStatusMutation],
   );
 
   const handleManageCourses = useCallback((student) => {
@@ -97,8 +171,9 @@ export default function StudentList() {
   }, []);
 
   const columns = useMemo(
-    () => getStudentColumns(handleEdit, handleDelete, handleManageCourses),
-    [handleEdit, handleDelete, handleManageCourses],
+    () =>
+      getStudentColumns(handleEdit, handleToggleStatus, handleManageCourses),
+    [handleEdit, handleToggleStatus, handleManageCourses],
   );
 
   const handleAddNew = useCallback(() => {
@@ -121,7 +196,10 @@ export default function StudentList() {
         <div className="d-flex justify-content-between align-items-center">
           <div>
             <h2 className={`fw-bold mb-2 ${styles.heroTitle}`}>
-              🎓 Students Management
+              <span className="d-inline-flex align-items-center gap-2">
+                <StudentIcon size={22} color="white" />
+                Students Management
+              </span>
             </h2>
             <p className={`mb-0 ${styles.heroSubtitle}`}>
               Manage and view all student information
@@ -135,6 +213,59 @@ export default function StudentList() {
 
       {/* Course Filter */}
       <div className={`glass-card ${styles.filterBar}`}>
+        <div className={styles.filterGroup}>
+          <label className={styles.filterLabel}>Filter by Teacher</label>
+          <Select
+            options={teacherOptions}
+            value={
+              selectedTeacherId
+                ? teacherOptions.find(
+                    (option) => option.value === selectedTeacherId,
+                  ) || null
+                : null
+            }
+            onChange={(selected) => setSelectedTeacherId(selected?.value || "")}
+            placeholder="Select teacher…"
+            isClearable
+            classNamePrefix="rs"
+            menuPortalTarget={document.body}
+            menuPosition="fixed"
+            styles={{
+              control: (base, state) => ({
+                ...base,
+                borderRadius: "10px",
+                border: state.isFocused
+                  ? "1.5px solid rgba(47,125,87,0.6)"
+                  : "1.5px solid rgba(148,163,184,0.4)",
+                boxShadow: state.isFocused
+                  ? "0 0 0 3px rgba(47,125,87,0.08)"
+                  : "none",
+                minHeight: "42px",
+                fontSize: "0.9rem",
+                background: "#fff",
+                "&:hover": { borderColor: "rgba(47,125,87,0.5)" },
+              }),
+              option: (base, state) => ({
+                ...base,
+                background: state.isSelected
+                  ? "#2f7d57"
+                  : state.isFocused
+                    ? "rgba(47,125,87,0.08)"
+                    : "#fff",
+                color: state.isSelected ? "#fff" : "#1e293b",
+                fontSize: "0.9rem",
+                cursor: "pointer",
+              }),
+              menu: (base) => ({
+                ...base,
+                borderRadius: "12px",
+                boxShadow: "0 10px 40px rgba(0,0,0,0.12)",
+                zIndex: 9999,
+              }),
+            }}
+          />
+        </div>
+
         <div className={styles.filterGroup}>
           <label className={styles.filterLabel}>Filter by Course</label>
           <Select
@@ -203,15 +334,18 @@ export default function StudentList() {
             }}
           />
         </div>
-        {filterCourses.length > 0 && (
+        {(filterCourses.length > 0 || selectedTeacherId) && (
           <button
             className={styles.clearButton}
-            onClick={() => setFilterCourses([])}
+            onClick={() => {
+              setFilterCourses([]);
+              setSelectedTeacherId("");
+            }}
           >
             ✕ Clear
           </button>
         )}
-        {filterCourses.length > 0 && (
+        {(filterCourses.length > 0 || selectedTeacherId) && (
           <span className={styles.recordsBadge}>
             {filteredStudents.length} Student
             {filteredStudents.length !== 1 ? "s" : ""}
@@ -241,16 +375,18 @@ export default function StudentList() {
                     }
                   />
                 </div>
-                {pagination.totalPages > 1 && !filterCourses.length && (
-                  <Pagination
-                    currentPage={pagination.page}
-                    totalPages={pagination.totalPages}
-                    totalItems={pagination.total}
-                    itemsPerPage={limit}
-                    onPageChange={setPage}
-                    showInfo={true}
-                  />
-                )}
+                {pagination.totalPages > 1 &&
+                  !filterCourses.length &&
+                  !selectedTeacherId && (
+                    <Pagination
+                      currentPage={pagination.page}
+                      totalPages={pagination.totalPages}
+                      totalItems={pagination.total}
+                      itemsPerPage={limit}
+                      onPageChange={setPage}
+                      showInfo={true}
+                    />
+                  )}
               </>
             )}
           </div>

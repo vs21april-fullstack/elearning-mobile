@@ -193,7 +193,13 @@
 }
 
 .rightPanel {
-  background: #ffffff;
+  background:
+    radial-gradient(
+      circle at top right,
+      rgba(47, 125, 87, 0.08),
+      transparent 42%
+    ),
+    #ffffff;
   overflow: hidden;
   position: relative;
 }
@@ -210,15 +216,17 @@
 }
 
 .loginCard {
-  width: 440px;
-  padding: 50px 45px;
+  width: min(520px, 94vw);
+  padding: 52px 48px;
   border-radius: 24px;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.97);
+  border: 1px solid rgba(148, 163, 184, 0.22);
   color: #1e293b;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  box-shadow:
+    0 24px 54px rgba(15, 23, 42, 0.14),
+    0 8px 24px rgba(15, 23, 42, 0.08);
   z-index: 1;
 }
 
@@ -243,7 +251,7 @@
 
 .loginSubtitle {
   color: #64748b;
-  font-size: 0.95rem;
+  font-size: 1rem;
   margin-bottom: 32px;
 }
 
@@ -301,12 +309,13 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 52px;
+  height: 54px;
   padding: 14px 24px;
   font-size: 1rem;
   font-weight: 600;
-  border-radius: 12px;
+  border-radius: 14px;
   gap: 8px;
+  box-shadow: 0 8px 18px rgba(30, 95, 66, 0.24);
 }
 
 .passwordInput {
@@ -321,6 +330,14 @@
   color: #94a3b8;
   font-size: 0.85rem;
   margin: 0;
+}
+
+@media (max-width: 768px) {
+  .loginCard {
+    width: min(500px, 94vw);
+    padding: 40px 28px;
+    border-radius: 20px;
+  }
 }
 
 .spinner {

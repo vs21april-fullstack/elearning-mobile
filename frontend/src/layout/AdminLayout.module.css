@@ -1,7 +1,7 @@
 .layout {
   display: flex;
-  min-height: 100vh;
-  overflow: hidden;
+  min-height: 100dvh;
+  overflow-x: hidden;
 }
 
 .main {
@@ -11,10 +11,29 @@
   background: #f8fafc;
   position: relative;
   overflow: visible;
+  min-width: 0;
 }
 
 .content {
   padding: 0;
   overflow-y: auto;
-  height: calc(100vh - 100px);
+  min-height: calc(100dvh - 100px);
+}
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  border: none;
+  background: rgba(15, 23, 42, 0.42);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  z-index: 1090;
+}
+
+@media (max-width: 991px) {
+  .content {
+    min-height: calc(100dvh - 72px);
+    height: auto;
+    padding-bottom: 12px;
+  }
 }

@@ -10,6 +10,7 @@ import {
   generateMeetingLink,
 } from "../meetings.api";
 import { fetchCourses } from "../../students/students.api";
+import { fetchTeachers } from "../../teachers/teachers.api";
 import { useAuth } from "../../../app/authContext";
 import toast from "react-hot-toast";
 import Button from "../../../components/Button";
@@ -72,7 +73,9 @@ export default function AddUpdateMeeting({
   meetingData = null,
 }) {
   const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
   const [selectedCourse, setSelectedCourse] = useState(null);
+  const [selectedTeacherId, setSelectedTeacherId] = useState("");
   const [filteredCourses, setFilteredCourses] = useState([]);
 
   // Fetch courses
@@ -81,12 +84,20 @@ export default function AddUpdateMeeting({
     queryFn: fetchCourses,
   });
 
+  const { data: teachersData } = useQuery({
+    queryKey: ["teachers-all"],
+    queryFn: () => fetchTeachers({ page: 1, limit: 500 }),
+    enabled: isAdmin,
+  });
+
   const allCourses = coursesData || [];
-  const teacherId = user?.id || "";
+  const teachers = teachersData?.data || [];
+  const teacherId = user?.id || user?._id || "";
+  const effectiveTeacherId = isAdmin ? selectedTeacherId : teacherId;
 
   // Filter courses by logged in teacher
   useEffect(() => {
-    if (teacherId) {
+    if (effectiveTeacherId) {
       const filtered = allCourses.filter((course) => {
         const legacyTeacherId =
           typeof course.teacher === "string"
@@ -100,15 +111,15 @@ export default function AddUpdateMeeting({
           : [];
 
         return (
-          legacyTeacherId === teacherId ||
-          assignedTeacherIds.includes(teacherId)
+          legacyTeacherId === effectiveTeacherId ||
+          assignedTeacherIds.includes(effectiveTeacherId)
         );
       });
       setFilteredCourses(filtered);
     } else {
       setFilteredCourses([]);
     }
-  }, [teacherId, allCourses]);
+  }, [effectiveTeacherId, allCourses]);
 
   const {
     control,
@@ -120,7 +131,7 @@ export default function AddUpdateMeeting({
     resolver: yupResolver(createMeetingSchema),
     defaultValues: meetingData || {
       title: "",
-      teacher: teacherId,
+      teacher: effectiveTeacherId,
       course: "",
       date: "",
       startTime: "",
@@ -130,10 +141,10 @@ export default function AddUpdateMeeting({
   });
 
   useEffect(() => {
-    if (teacherId) {
-      setValue("teacher", teacherId);
+    if (effectiveTeacherId) {
+      setValue("teacher", effectiveTeacherId);
     }
-  }, [teacherId, setValue]);
+  }, [effectiveTeacherId, setValue]);
 
   // Populate form when editing
   useEffect(() => {
@@ -149,7 +160,16 @@ export default function AddUpdateMeeting({
       setValue("startTime", meetingData.startTime || "");
       setValue("endTime", meetingData.endTime || "");
 
-      setValue("teacher", teacherId);
+      const meetingTeacherId =
+        typeof meetingData.teacher === "string"
+          ? meetingData.teacher
+          : meetingData.teacher?._id;
+      const teacherToSet = meetingTeacherId || teacherId;
+
+      if (teacherToSet) {
+        setSelectedTeacherId(teacherToSet);
+        setValue("teacher", teacherToSet);
+      }
 
       if (meetingData.course) {
         const courseId =
@@ -258,13 +278,62 @@ export default function AddUpdateMeeting({
                 </div>
 
                 {/* Teacher Selection */}
-                <Controller
-                  name="teacher"
-                  control={control}
-                  render={({ field }) => (
-                    <input type="hidden" {...field} value={teacherId} />
-                  )}
-                />
+                {isAdmin ? (
+                  <div className="col-md-12 mb-3">
+                    <label className="form-label fw-bold">
+                      Teacher <span className="text-danger">*</span>
+                    </label>
+                    <Controller
+                      name="teacher"
+                      control={control}
+                      render={({ field }) => (
+                        <Select
+                          options={teachers.map((teacher) => ({
+                            value: teacher._id,
+                            label: teacher.name,
+                          }))}
+                          value={
+                            field.value
+                              ? {
+                                  value: field.value,
+                                  label:
+                                    teachers.find((t) => t._id === field.value)
+                                      ?.name || "",
+                                }
+                              : null
+                          }
+                          onChange={(option) => {
+                            const value = option ? option.value : "";
+                            setSelectedTeacherId(value);
+                            setSelectedCourse(null);
+                            setValue("course", "");
+                            field.onChange(value);
+                          }}
+                          isClearable
+                          placeholder="Select teacher"
+                          styles={selectStyles}
+                        />
+                      )}
+                    />
+                    {errors.teacher && (
+                      <div className="invalid-feedback d-block">
+                        {errors.teacher.message}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <Controller
+                    name="teacher"
+                    control={control}
+                    render={({ field }) => (
+                      <input
+                        type="hidden"
+                        {...field}
+                        value={effectiveTeacherId}
+                      />
+                    )}
+                  />
+                )}
 
                 {/* Course Selection */}
                 <div className="col-md-12 mb-3">
@@ -299,7 +368,12 @@ export default function AddUpdateMeeting({
                           field.onChange(value);
                         }}
                         isClearable
-                        placeholder="Select your course"
+                        placeholder={
+                          isAdmin && !selectedTeacherId
+                            ? "Select teacher first"
+                            : "Select your course"
+                        }
+                        isDisabled={isAdmin && !selectedTeacherId}
                         styles={selectStyles}
                       />
                     )}
@@ -310,7 +384,7 @@ export default function AddUpdateMeeting({
                     </div>
                   )}
                   <small className="text-muted">
-                    Only your assigned courses are shown
+                    Only assigned courses for the selected teacher are shown
                   </small>
                 </div>
 
@@ -373,7 +447,7 @@ export default function AddUpdateMeeting({
                         className={styles.copyButton}
                         onClick={handleCopyMeetingLink}
                       >
-                        📋 Generate & Copy Link
+                        Generate & Copy Link
                       </button>
                     </div>
                     <small className={styles.noteText}>

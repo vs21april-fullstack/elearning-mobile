@@ -117,7 +117,7 @@ export const updateStudent = async (req, reply) => {
 
 export const deleteStudent = async (req, reply) => {
   const student = await User.findOneAndUpdate(
-    { _id: req.params.id, role: 'student' },
+    { _id: req.params.id, role: 'student', isActive: true },
     { isActive: false },
     { new: true }
   )
@@ -226,7 +226,7 @@ export const updateTeacher = async (req, reply) => {
 
 export const deleteTeacher = async (req, reply) => {
   const teacher = await User.findOneAndUpdate(
-    { _id: req.params.id, role: 'teacher' },
+    { _id: req.params.id, role: 'teacher', isActive: true },
     { isActive: false },
     { new: true }
   )

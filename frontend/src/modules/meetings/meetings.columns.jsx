@@ -4,6 +4,7 @@
 
 import EditIcon from "../../assets/svg/EditIcon";
 import DeleteIcon from "../../assets/svg/DeleteIcon";
+import CopyIcon from "../../assets/svg/CopyIcon";
 import styles from "../../styles/Columns.module.css";
 
 const formatDate = (date) => {
@@ -34,6 +35,7 @@ export const getMeetingColumns = (
   handleDelete,
   handleCopyLink,
   handleJoin,
+  role,
 ) => [
   {
     header: "Meeting",
@@ -74,13 +76,13 @@ export const getMeetingColumns = (
     accessor: "actions",
     cell: (row) => (
       <div className={styles.actionRow}>
-        {handleJoin && (
+        {handleJoin && role !== "admin" && (
           <button
             onClick={() => handleJoin(row)}
             className={`${styles.actionButton} ${styles.buttonSuccess}`}
             title="Join Meeting"
           >
-            📞 Join
+            Join
           </button>
         )}
         {row.meetingLink && (
@@ -89,7 +91,7 @@ export const getMeetingColumns = (
             className={`${styles.actionButton} ${styles.buttonInfo}`}
             title="Copy Meeting Link"
           >
-            📋 Link
+            <CopyIcon size={16} color="white" /> Link
           </button>
         )}
         <button

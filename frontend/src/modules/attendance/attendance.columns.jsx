@@ -177,4 +177,27 @@ export const getMeetingLogColumns = () => [
       </span>
     ),
   },
+  {
+    header: "Teacher Presence",
+    accessor: "presenceEvents",
+    cell: (row) => {
+      const teacherId = row.teacher?._id;
+      const wasPresent = row.presenceEvents?.some((event) => {
+        const eventUserId = event?.user?._id || event?.user;
+        return (
+          String(eventUserId || "") === String(teacherId || "") &&
+          event?.event === "join"
+        );
+      });
+      return (
+        <span
+          className={`${styles.statusBadge} ${
+            wasPresent ? styles.statusPresent : styles.statusAbsent
+          }`}
+        >
+          {wasPresent ? "Present" : "Absent"}
+        </span>
+      );
+    },
+  },
 ];
