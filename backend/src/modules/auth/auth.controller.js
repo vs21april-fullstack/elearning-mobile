@@ -10,13 +10,8 @@ export const login = async (req, reply) => {
     // Include password explicitly
     const user = await User.findByEmailOrPhone(email, true)
 
-    if (!user || !user.password) {
+    if (!user || !user.password || !user.isActive) {
       return error(reply, 'Invalid credentials', 401)
-    }
-
-    // Optional: Check if account active
-    if (!user.isActive) {
-      return error(reply, 'Account is deactivated', 403)
     }
 
     const match = await bcrypt.compare(password, user.password)

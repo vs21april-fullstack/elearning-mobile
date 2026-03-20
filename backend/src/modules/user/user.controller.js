@@ -1,8 +1,11 @@
 import mongoose from 'mongoose'
 import User from './user.model.js'
 import UserCourse from './userCourse.model.js'
+import UserClass from './userClass.model.js'
 import Course from '../course/course.model.js'
 import Parents from '../parents/parents.model.js'
+import Attendance from '../attendance/attendance.model.js'
+import Meeting from '../meeting/meeting.model.js'
 import { success, successWithPagination } from '../../utils/response.js'
 import { NotFoundError, ConflictError } from '../../utils/customErrors.js'
 import { PAGINATION } from '../../utils/constants.js'
@@ -116,18 +119,26 @@ export const updateStudent = async (req, reply) => {
 }
 
 export const deleteStudent = async (req, reply) => {
-  const student = await User.findOneAndUpdate(
-    { _id: req.params.id, role: 'student', isActive: true },
-    { isActive: false },
-    { new: true }
-  )
+  const student = await User.findOne({ _id: req.params.id, role: 'student' })
 
   if (!student) {
     throw new NotFoundError('Student', req.params.id)
   }
 
-  logger.info(`Student deleted: ${student._id}`)
-  return success(reply, student, 'Student deleted successfully', 200)
+  const studentId = student._id
+
+  // Cascade delete all related data
+  await Promise.all([
+    UserCourse.deleteMany({ user: studentId }),
+    UserClass.deleteMany({ user: studentId }),
+    Attendance.deleteMany({ student: studentId }),
+    Parents.deleteMany({ student: studentId }),
+  ])
+
+  await User.deleteOne({ _id: studentId })
+
+  logger.info(`Student and all related data deleted: ${studentId}`)
+  return success(reply, { _id: studentId }, 'Student deleted successfully', 200)
 }
 
 // Teacher CRUD
@@ -225,16 +236,24 @@ export const updateTeacher = async (req, reply) => {
 }
 
 export const deleteTeacher = async (req, reply) => {
-  const teacher = await User.findOneAndUpdate(
-    { _id: req.params.id, role: 'teacher', isActive: true },
-    { isActive: false },
-    { new: true }
-  )
+  const teacher = await User.findOne({ _id: req.params.id, role: 'teacher' })
 
   if (!teacher) {
     throw new NotFoundError('Teacher', req.params.id)
   }
 
-  logger.info(`Teacher deleted: ${teacher._id}`)
-  return success(reply, teacher, 'Teacher deleted successfully', 200)
+  const teacherId = teacher._id
+
+  // Cascade: remove teacher references from courses and related records
+  await Promise.all([
+    Course.updateMany({ teacher: teacherId }, { $unset: { teacher: '' } }),
+    Course.updateMany({ teachers: teacherId }, { $pull: { teachers: teacherId } }),
+    UserCourse.updateMany({ teacher: teacherId }, { $set: { teacher: null } }),
+    Meeting.deleteMany({ teacher: teacherId }),
+  ])
+
+  await User.deleteOne({ _id: teacherId })
+
+  logger.info(`Teacher and all related data deleted: ${teacherId}`)
+  return success(reply, { _id: teacherId }, 'Teacher deleted successfully', 200)
 }
