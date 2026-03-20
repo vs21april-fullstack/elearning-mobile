@@ -1,9 +1,0 @@
-<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="256" height="256" rx="32" fill="#EAF6EF"/>
-  <circle cx="96" cy="92" r="56" fill="#D7EDDF"/>
-  <path d="M96 44L104 60H121L108 70L113 87L96 77L79 87L84 70L71 60H88L96 44Z" fill="#2F7D57"/>
-  <path d="M93 102H99V190H93V102Z" fill="#1E5F42"/>
-  <path d="M99 112L156 90L161 103L104 124L99 112Z" fill="#2F7D57"/>
-  <path d="M156 84L188 98L166 120L145 107L156 84Z" fill="#1E5F42"/>
-  <text x="44" y="228" fill="#1E5F42" font-size="30" font-weight="700" font-family="Inter, Segoe UI, Arial, sans-serif">QA</text>
-</svg>
